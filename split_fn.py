@@ -5,7 +5,7 @@ from scipy.stats import truncnorm
 import torch
 import torch.nn.functional as F
 
-from utils import *
+from .utils import *
 
 # For reproducibility only
 def set_seed(

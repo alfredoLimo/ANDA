@@ -1,7 +1,7 @@
-import split_fn
-import utils
-from split_fn import *
-from utils import *
+from . import split_fn
+from . import utils
+from .split_fn import *
+from .utils import *
 
 def set_seed(
     RANDOM_SEED: int = 42
@@ -312,18 +312,3 @@ def load_split_datasets(
                              file_name=f"{dataset_name}_{client_number}_{non_iid_type}")
 
     return rearranged_data
-
-
-#quick test
-rearranged_data = load_split_datasets(
-    dataset_name = "MNIST",
-    client_number = 10,
-    non_iid_type = "feature_skew",
-    mode = "auto",
-    show_labels = True,
-    non_iid_level = "high",
-    random_seed = 42,
-    set_rotation = False, rotations = 2, set_color = True, colors = 3,
-    random_mode = True, rotated_label_number = 5, colored_label_number = 5,
-    verbose = True
-)
