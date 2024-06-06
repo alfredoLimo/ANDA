@@ -26,10 +26,28 @@ def load_split_datasets(
     show_features: bool = False,
     show_labels: bool = False,
     random_seed: int = 42,
-    **kwargs
+    **kwargs: dict
 ) -> list:
     """
+    Load the split datasets for the federated learning.
+
+    Refer to
+    https://github.com/alfredoLimo/ANDA 
+    for a quick start.
+
+    Args:
+        dataset_name (str): The name of the dataset to load.
+        client_number (int): The number of clients to split the dataset.
+        non_iid_type (str): The type of non-iid data distribution.
+        mode (str): "auto" or "manual".
+        non_iid_level (str): The level of non-iid data distribution. (in auto mode)
+        show_features (bool): Whether to show the feature distribution.
+        show_labels (bool): Whether to show the label distribution.
+        random_seed (int): The random seed for reproducibility.
+        **kwargs (dict): The additional arguments for manual mode.
     
+    Returns:
+        list: The list of length client_number, each element is a dictionary containing the split dataset.
     """
     set_seed(random_seed)
     train_features, train_labels, test_features, test_labels = load_full_datasets(dataset_name)
@@ -277,30 +295,35 @@ def load_split_datasets(
             raise ValueError("non_iid_level must be 'low', 'medium', or 'high'")
 
     elif mode == "manual":
-        pass
+        fn = f"split_{non_iid_type}"
+        if fn in globals():
+            rearranged_data = globals()[fn](
+                train_features, train_labels, test_features, test_labels, client_number,
+                **kwargs,
+            )
+        else:
+            print(f"Function {fn} does not exist")
 
     else:
         raise ValueError("mode must be 'auto' or 'manual'")   
 
     if show_labels:
-        draw_split_statistic(rearranged_data, plot_indices=[0],save=True,
+        draw_split_statistic(rearranged_data, plot_indices=[0,1,2,3],save=True,
                              file_name=f"{dataset_name}_{client_number}_{non_iid_type}")
 
     return rearranged_data
-
-
-
-
 
 
 #quick test
 rearranged_data = load_split_datasets(
     dataset_name = "MNIST",
     client_number = 10,
-    non_iid_type = "feature_condition_skew",
+    non_iid_type = "feature_skew",
     mode = "auto",
-    non_iid_level = "low",
-    show_features = True,
     show_labels = True,
-    random_seed = 42
+    non_iid_level = "high",
+    random_seed = 42,
+    set_rotation = False, rotations = 2, set_color = True, colors = 3,
+    random_mode = True, rotated_label_number = 5, colored_label_number = 5,
+    verbose = True
 )

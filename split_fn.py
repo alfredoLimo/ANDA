@@ -5,7 +5,6 @@ from scipy.stats import truncnorm
 import torch
 import torch.nn.functional as F
 
-import utils
 from utils import *
 
 # For reproducibility only
