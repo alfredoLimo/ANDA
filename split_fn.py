@@ -162,34 +162,9 @@ def split_label_skew(
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
     assert scaling_label_high >= scaling_label_low, "High scaling must be larger than low scaling."
 
-    def calculate_probabilities(labels, scaling):
-        # Count the occurrences of each label
-        label_counts = torch.bincount(labels, minlength=10).float()
-        scaled_counts = label_counts ** scaling
-        
-        # Apply softmax to get probabilities
-        probabilities = F.softmax(scaled_counts, dim=0)
-        
-        return probabilities
 
-    def create_sub_dataset(features, labels, probabilities, num_points):
-        selected_indices = []
-        while len(selected_indices) < num_points:
-            for i in range(len(labels)):
-                if torch.rand(1).item() < probabilities[labels[i]].item():
-                    selected_indices.append(i)
-                if len(selected_indices) >= num_points:
-                    break
-        
-        selected_indices = torch.tensor(selected_indices)
-        sub_features = features[selected_indices]
-        sub_labels = labels[selected_indices]
-        remaining_indices = torch.ones(len(labels), dtype=torch.bool)
-        remaining_indices[selected_indices] = 0
-        remaining_features = features[remaining_indices]
-        remaining_labels = labels[remaining_indices]
 
-        return sub_features, sub_labels, remaining_features, remaining_labels
+
 
     avg_points_per_client_train = len(train_labels) // client_number
     avg_points_per_client_test = len(test_labels) // client_number
@@ -281,35 +256,6 @@ def split_feature_label_skew(
         list: A list of dictionaries where each dictionary contains the features and labels for each client.
 
     '''
-
-    def calculate_probabilities(labels, scaling):
-        # Count the occurrences of each label
-        label_counts = torch.bincount(labels, minlength=10).float()
-        scaled_counts = label_counts ** scaling
-        
-        # Apply softmax to get probabilities
-        probabilities = F.softmax(scaled_counts, dim=0)
-        
-        return probabilities
-
-    def create_sub_dataset(features, labels, probabilities, num_points):
-        selected_indices = []
-        while len(selected_indices) < num_points:
-            for i in range(len(labels)):
-                if torch.rand(1).item() < probabilities[labels[i]].item():
-                    selected_indices.append(i)
-                if len(selected_indices) >= num_points:
-                    break
-        
-        selected_indices = torch.tensor(selected_indices)
-        sub_features = features[selected_indices]
-        sub_labels = labels[selected_indices]
-        remaining_indices = torch.ones(len(labels), dtype=torch.bool)
-        remaining_indices[selected_indices] = 0
-        remaining_features = features[remaining_indices]
-        remaining_labels = labels[remaining_indices]
-
-        return sub_features, sub_labels, remaining_features, remaining_labels
 
     avg_points_per_client_train = len(train_labels) // client_number
     avg_points_per_client_test = len(test_labels) // client_number
@@ -532,35 +478,6 @@ def split_label_skew_unbalanced(
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
     assert std_dev > 0, "Standard deviation must be larger than 0."
     assert scaling_label_high >= scaling_label_low, "High scaling must be larger than low scaling."
-
-    def calculate_probabilities(labels, scaling):
-        # Count the occurrences of each label
-        label_counts = torch.bincount(labels, minlength=10).float()
-        scaled_counts = label_counts ** scaling
-        
-        # Apply softmax to get probabilities
-        probabilities = F.softmax(scaled_counts, dim=0)
-        
-        return probabilities
-
-    def create_sub_dataset(features, labels, probabilities, num_points):
-        selected_indices = []
-        while len(selected_indices) < num_points:
-            for i in range(len(labels)):
-                if torch.rand(1).item() < probabilities[labels[i]].item():
-                    selected_indices.append(i)
-                if len(selected_indices) >= num_points:
-                    break
-        
-        selected_indices = torch.tensor(selected_indices)
-        sub_features = features[selected_indices]
-        sub_labels = labels[selected_indices]
-        remaining_indices = torch.ones(len(labels), dtype=torch.bool)
-        remaining_indices[selected_indices] = 0
-        remaining_features = features[remaining_indices]
-        remaining_labels = labels[remaining_indices]
-
-        return sub_features, sub_labels, remaining_features, remaining_labels
 
     # Generate different number of samples for each client
     def generate_samples_per_client(features, client_number, std_dev):
@@ -1114,36 +1031,6 @@ def split_feature_condition_skew_with_label_skew(
         assert mixing_label_list is not None, "The list of labels to swap must be provided."
         assert len(mixing_label_list) == len(set(mixing_label_list)), "Repeated list."
         assert all(0 <= label <= max_label for label in mixing_label_list), "Label out of range."
-    
-
-    def calculate_probabilities(labels, scaling):
-        # Count the occurrences of each label
-        label_counts = torch.bincount(labels, minlength=10).float()
-        scaled_counts = label_counts ** scaling
-        
-        # Apply softmax to get probabilities
-        probabilities = F.softmax(scaled_counts, dim=0)
-        
-        return probabilities
-
-    def create_sub_dataset(features, labels, probabilities, num_points):
-        selected_indices = []
-        while len(selected_indices) < num_points:
-            for i in range(len(labels)):
-                if torch.rand(1).item() < probabilities[labels[i]].item():
-                    selected_indices.append(i)
-                if len(selected_indices) >= num_points:
-                    break
-        
-        selected_indices = torch.tensor(selected_indices)
-        sub_features = features[selected_indices]
-        sub_labels = labels[selected_indices]
-        remaining_indices = torch.ones(len(labels), dtype=torch.bool)
-        remaining_indices[selected_indices] = 0
-        remaining_features = features[remaining_indices]
-        remaining_labels = labels[remaining_indices]
-
-        return sub_features, sub_labels, remaining_features, remaining_labels
 
     avg_points_per_client_train = len(train_labels) // client_number
     avg_points_per_client_test = len(test_labels) // client_number
@@ -1278,35 +1165,6 @@ def split_label_condition_skew_with_label_skew(
         assert len(colored_label_list) == len(set(colored_label_list)), "Repeated list."
         assert all(0 <= label <= max_label for label in rotated_label_list), "Label out of range."
         assert all(0 <= label <= max_label for label in colored_label_list), "Label out of range."
-
-    def calculate_probabilities(labels, scaling):
-        # Count the occurrences of each label
-        label_counts = torch.bincount(labels, minlength=10).float()
-        scaled_counts = label_counts ** scaling
-        
-        # Apply softmax to get probabilities
-        probabilities = F.softmax(scaled_counts, dim=0)
-        
-        return probabilities
-
-    def create_sub_dataset(features, labels, probabilities, num_points):
-        selected_indices = []
-        while len(selected_indices) < num_points:
-            for i in range(len(labels)):
-                if torch.rand(1).item() < probabilities[labels[i]].item():
-                    selected_indices.append(i)
-                if len(selected_indices) >= num_points:
-                    break
-        
-        selected_indices = torch.tensor(selected_indices)
-        sub_features = features[selected_indices]
-        sub_labels = labels[selected_indices]
-        remaining_indices = torch.ones(len(labels), dtype=torch.bool)
-        remaining_indices[selected_indices] = 0
-        remaining_features = features[remaining_indices]
-        remaining_labels = labels[remaining_indices]
-
-        return sub_features, sub_labels, remaining_features, remaining_labels
 
     avg_points_per_client_train = len(train_labels) // client_number
     avg_points_per_client_test = len(test_labels) // client_number

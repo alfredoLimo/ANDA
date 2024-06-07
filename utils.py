@@ -4,6 +4,7 @@ from scipy.stats import truncnorm
 import os
 
 import torch
+import torch.nn.functional as F
 from torchvision import datasets, transforms
 
 def set_seed(
@@ -458,3 +459,32 @@ def assigning_color_features(
     #     print(f'{letter}: {count}')
 
     return colors_assigned
+
+def calculate_probabilities(labels, scaling):
+    # Count the occurrences of each label
+    label_counts = torch.bincount(labels, minlength=10).float()
+    scaled_counts = label_counts ** scaling
+    
+    # Apply softmax to get probabilities
+    probabilities = F.softmax(scaled_counts, dim=0)
+    
+    return probabilities
+
+def create_sub_dataset(features, labels, probabilities, num_points):
+    selected_indices = []
+    while len(selected_indices) < num_points:
+        for i in range(len(labels)):
+            if torch.rand(1).item() < probabilities[labels[i]].item():
+                selected_indices.append(i)
+            if len(selected_indices) >= num_points:
+                break
+    
+    selected_indices = torch.tensor(selected_indices)
+    sub_features = features[selected_indices]
+    sub_labels = labels[selected_indices]
+    remaining_indices = torch.ones(len(labels), dtype=torch.bool)
+    remaining_indices[selected_indices] = 0
+    remaining_features = features[remaining_indices]
+    remaining_labels = labels[remaining_indices]
+
+    return sub_features, sub_labels, remaining_features, remaining_labels
