@@ -51,10 +51,10 @@ new_dataset = anda.load_split_datasets(
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
 
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/2cbd40db-0848-4f2f-b564-f686d8e1a4e7" alt="Client 0" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/d1fc756d-8c9f-4e29-9b26-58b315619971" alt="Client 1" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/42edd1ad-4838-4f53-873c-4bb6f5a54b87" alt="Client 2" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/1ae8f2e5-82c9-4868-8493-3fc817b08192" alt="Client 3" width="300"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/2cbd40db-0848-4f2f-b564-f686d8e1a4e7" alt="Client 0" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/d1fc756d-8c9f-4e29-9b26-58b315619971" alt="Client 1" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/42edd1ad-4838-4f53-873c-4bb6f5a54b87" alt="Client 2" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/1ae8f2e5-82c9-4868-8493-3fc817b08192" alt="Client 3" width="400"/>
 
 ## CUSTOMIZE WITH MANUAL MODE
 
@@ -85,10 +85,10 @@ new_dataset = anda.load_split_datasets(
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
 
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/c5aa40c7-e078-4564-b786-8ee3a901e6fa" alt="Client 0" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/708526dc-e7c1-4828-840e-851a1d7e0ab3" alt="Client 1" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/fe9ee7a1-4be5-47bd-b242-bc0a16c96239" alt="Client 2" width="300"/>
-<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/a9b75621-5ad5-4d09-be36-b96e38e7def2" alt="Client 3" width="300"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/c5aa40c7-e078-4564-b786-8ee3a901e6fa" alt="Client 0" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/708526dc-e7c1-4828-840e-851a1d7e0ab3" alt="Client 1" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/fe9ee7a1-4be5-47bd-b242-bc0a16c96239" alt="Client 2" width="400"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/a9b75621-5ad5-4d09-be36-b96e38e7def2" alt="Client 3" width="400"/>
 
 
 
