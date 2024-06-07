@@ -31,21 +31,30 @@ new_dataset = anda.load_split_datasets()
 
 - **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
 - **client_number**: int = 10, number of clients/sub-datasets
-- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md).
-- **mode**: str = "auto", using AUTO mode.
-- **non_iid_level**: str = "medium"
-  - "low":
-  - "medium":
-  - "high":
+- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md)
+- **mode**: str = "auto", using AUTO mode
+- **non_iid_level**: str = "medium", auto setting a level for non-IID, "low","medium", or "high"
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
 
 ```python
-from ANDA import anda
-
-new_dataset = anda.load_split_datasets()
+new_dataset = anda.load_split_datasets(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "feature_skew",
+    mode = "auto",
+    non_iid_level = "high",
+    show_labels = True,
+    random_seed = 42
+)
 ```
+Results: (showing data from first four clients, try to repeat it with the same seed)
+
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/2cbd40db-0848-4f2f-b564-f686d8e1a4e7" alt="Client 0" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/d1fc756d-8c9f-4e29-9b26-58b315619971" alt="Client 1" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/42edd1ad-4838-4f53-873c-4bb6f5a54b87" alt="Client 2" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/1ae8f2e5-82c9-4868-8493-3fc817b08192" alt="Client 3" width="500"/>
 
 ## CUSTOMIZE WITH MANUAL MODE
 
@@ -64,16 +73,29 @@ new_dataset = anda.load_split_datasets()
 new_dataset = anda.load_split_datasets(
     dataset_name = "MNIST",
     client_number = 10,
-    non_iid_type = "feature_skew",
-    mode = "auto",
-    non_iid_level = "high",
+    non_iid_type = "label_condition_skew",
+    mode = "manual",
     show_labels = True,
-    random_seed = 42
+    random_seed = 42,
+    set_color = True,
+    colors = 3,
+    random_mode = True,
+    colored_label_number = 4,
 )
 ```
-Results: (showing )
+Results: (showing data from first four clients, try to repeat it with the same seed)
+
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/c5aa40c7-e078-4564-b786-8ee3a901e6fa" alt="Client 0" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/708526dc-e7c1-4828-840e-851a1d7e0ab3" alt="Client 1" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/fe9ee7a1-4be5-47bd-b242-bc0a16c96239" alt="Client 2" width="500"/>
+<img src="https://github.com/alfredoLimo/ANDA/assets/68495667/a9b75621-5ad5-4d09-be36-b96e38e7def2" alt="Client 3" width="500"/>
+
 
 
 ## MORE ON NON-IID
+[Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
+
+[Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
 
 ## FUTURE WORK
+- Dynamic/drifting non-IID datasets.
