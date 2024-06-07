@@ -27,13 +27,51 @@ new_dataset = anda.load_split_datasets()
 
 ## QUICK START WITH AUTO MODE
 
+`load_split_datasets` **parameters**
+
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md).
+- **mode**: str = "auto", using AUTO mode.
+- **non_iid_level**: str = "medium"
+  - "low":
+  - "medium":
+  - "high":
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+
+```python
+from ANDA import anda
+
+new_dataset = anda.load_split_datasets()
+```
+
 ## CUSTOMIZE WITH MANUAL MODE
 
+`load_split_datasets` **parameters**
 
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md).
+- **mode**: str = "manual", using MANUAL mode.
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+- **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](appendix.md).
 
-
-
-
+```python
+new_dataset = anda.load_split_datasets(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "feature_skew",
+    mode = "auto",
+    non_iid_level = "high",
+    show_labels = True,
+    random_seed = 42
+)
+```
+Results: (showing )
 
 
 ## MORE ON NON-IID
