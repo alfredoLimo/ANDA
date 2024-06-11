@@ -227,7 +227,7 @@ def color_dataset(
     Args:
         dataset (torch.Tensor): Input dataset, a tensor of shape (N, H, W) or (N, 3, H, W)
                                 where N is the number of images.
-        colors (list) : List of 'red', 'green', 'blue'， 'gray'.
+        colors (list) : List of 'red', 'green', 'blue', 'gray'.
 
     Warning:
         MNIST, FMNIST, EMNIST are 1-channel. CIFAR10, CIFAR100 are 3-channel.
@@ -460,7 +460,56 @@ def assigning_color_features(
 
     return colors_assigned
 
-def calculate_probabilities(labels, scaling):
+def assigning_gray_color_features(
+    datapoint_number: int,
+    colors: int = 3,
+    scaling: float = 0.1,
+    random_order: bool = True
+) -> list:
+    '''
+    Assigns colors to the datapoints based on the softmax probabilities.
+
+    Args:
+        datapoint_number (int): Number of datapoints to assign colors to.
+        colors (int): Number of colors to assign. Must be 2 or 3.
+        scaling (float): Scaling factor for the softmax probabilities. 0: Uniform distribution.
+        random_order (bool): Whether to shuffle the order of the colors.
+
+    Returns:
+        list: A list of colors assigned to the datapoints.
+    '''
+
+    assert 0 <= scaling <= 1, "k must be between 0 and 1."
+    assert colors == 2 or colors == 3, "Color must be 2 or 3."
+    
+    # Scale the values based on k
+    values = np.arange(colors, 0, -1)  # From N to 1
+    scaled_values = values * scaling
+    
+    # Apply softmax to get the probabilities
+    exp_values = np.exp(scaled_values)
+    probabilities = exp_values / np.sum(exp_values)
+
+    if colors == 2:
+        letters = ['red', 'blue']
+    else:
+        letters = ['red', 'blue', 'green']
+
+    if random_order:
+        np.random.shuffle(letters)
+
+    colors_assigned = np.random.choice(letters, size=datapoint_number, p=probabilities)
+
+    # unique, counts = np.unique(colors_assigned, return_counts=True)
+    # for letter, count in zip(unique, counts):
+    #     print(f'{letter}: {count}')
+
+    return colors_assigned
+
+def calculate_probabilities(
+    labels,
+    scaling
+):
     # Count the occurrences of each label
     label_counts = torch.bincount(labels, minlength=10).float()
     scaled_counts = label_counts ** scaling
@@ -470,7 +519,12 @@ def calculate_probabilities(labels, scaling):
     
     return probabilities
 
-def create_sub_dataset(features, labels, probabilities, num_points):
+def create_sub_dataset(
+        features, 
+        labels, 
+        probabilities, 
+        num_points
+):
     selected_indices = []
     while len(selected_indices) < num_points:
         for i in range(len(labels)):
