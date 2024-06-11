@@ -14,6 +14,14 @@
   - **concept drift: feature condition skew:** P(x|y)
   - **concept drift: label condition skew:** P(y|x)
   - **quantity skew**
+ 
+| **Non-IID type** | **P(x)**     | **P(y)**           | **P(x\|y)**                            | **P(y\|x)**                          | **Quantity**                      |
+|------------------|--------------|--------------------|----------------------------------------|--------------------------------------|-----------------------------------|
+| **P(x)**         | `feature_skew` | `feature_label_skew` | /                        | /                        | `feature_skew_unbalanced`           |
+| **P(y)**         | /            | `label_skew`         | `feature_condition_skew_with_label_skew` | `label_condition_skew_with_label_skew` | `label_skew_unbalanced`             |
+| **P(x\|y)**      | /            | /                  | `feature_condition_skew`                 | /                      | `feature_condition_skew_unbalanced` |
+| **P(y\|x)**      | /            | /                  | /                                      | `label_condition_skew`                 | `label_condition_skew_unbalanced`   |
+| **Quantity**     | /            | /                  | /                                      | /                                    | `split_unbalanced`                  |
 - Supporting two modes: **AUTO** and **MANUAL**.
 ---
 ## USAGE WITH ONE LINE
