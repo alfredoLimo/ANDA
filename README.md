@@ -107,3 +107,45 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 ## FUTURE WORK
 - Dynamic/drifting non-IID datasets.
+
+<table>
+  <tr>
+    <th>Training</th>
+    <th>Testing</th>
+    <th>Supporting</th>
+  </tr>
+  <tr>
+    <td rowspan="2">No drifting (with a relatively large in size dataset)</td>
+    <td>Drifting</td>
+    <th>Yes</th>
+    
+  </tr>
+  <tr>
+    <td>N/A (No drifting for both is static dataset)</td>
+    <th>No</th>
+  </tr>
+
+  
+  <tr>
+    <td rowspan="2">Drifting with accumulation</td>
+    <td>Drifting</td>
+    <th>Yes</th>
+    
+  </tr>
+  <tr>
+    <td>No drifting</td>
+    <th>Yes</th>
+  </tr>
+
+  <tr>
+    <td rowspan="2">Drifting without accumulation</td>
+    <td>Drifting</td>
+    <th>Yes</th>
+    
+  </tr>
+  <tr>
+    <td>No drifting</td>
+    <th>Yes</th>
+  </tr>
+*accumulation: drifting data are <b>appended to</b>, not replacing old datasets.
+</table>
