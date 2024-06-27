@@ -105,7 +105,7 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
 
-## FUTURE WORK
+## UNDER CONSTRUCTION
 - Dynamic/drifting non-IID datasets.
 
 <table>
@@ -113,16 +113,20 @@ Results: (showing data from first four clients, try to repeat it with the same s
     <th>Training</th>
     <th>Testing</th>
     <th>Supporting</th>
+    <th>Module Name</th>
   </tr>
   <tr>
     <td rowspan="2">No drifting (with a relatively large in size dataset)</td>
     <td>Drifting</td>
     <th>Yes</th>
+    <th>trND_teDR</th>
     
   </tr>
   <tr>
     <td>N/A (No drifting for both is static dataset)</td>
     <th>No</th>
+    <th>\</th>
+    
   </tr>
 
   
@@ -130,22 +134,29 @@ Results: (showing data from first four clients, try to repeat it with the same s
     <td rowspan="2">Drifting with accumulation</td>
     <td>Drifting</td>
     <th>Yes</th>
+    <th>trDA_teDR</th>
     
   </tr>
   <tr>
     <td>No drifting</td>
     <th>Yes</th>
+    <th>trDA_teND</th>
+    
   </tr>
 
   <tr>
     <td rowspan="2">Drifting without accumulation</td>
     <td>Drifting</td>
     <th>Yes</th>
+    <th>trDR_teDR</th>
+    
     
   </tr>
   <tr>
     <td>No drifting</td>
     <th>Yes</th>
+    <th>trDR_teND</th>
+    
   </tr>
 *accumulation: drifting data are <b>appended to</b>, not replacing old datasets.
 </table>
