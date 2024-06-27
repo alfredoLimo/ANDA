@@ -76,6 +76,9 @@ def split_feature_skew(
 
     # Process train and test splits with rotations if required
     if set_rotation:
+        client_Count = 0
+        print("Showing rotation distributions..") if show_distribution else None
+
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
             len_train = len(client_data_train['labels'])
@@ -85,7 +88,8 @@ def split_feature_skew(
                 np.random.uniform(scaling_rotation_low,scaling_rotation_high), random_order
                 )
             
-            print(dict(Counter(total_rotations))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
+            client_Count += 1
 
             # Split the total_rotations list into train and test
             train_rotations = total_rotations[:len_train]
@@ -95,6 +99,9 @@ def split_feature_skew(
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
 
     if set_color:
+        client_Count = 0
+        print("Showing color distributions..") if show_distribution else None
+
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
             len_train = len(client_data_train['labels'])
@@ -103,8 +110,9 @@ def split_feature_skew(
                 len_train + len_test, colors, 
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
-            
-            print(dict(Counter(total_colors))) if show_distribution else None
+
+            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
+            client_Count += 1
 
             # Split the total_colors list into train and test
             train_colors = total_colors[:len_train]
@@ -162,10 +170,6 @@ def split_label_skew(
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
     assert scaling_label_high >= scaling_label_low, "High scaling must be larger than low scaling."
 
-
-
-
-
     avg_points_per_client_train = len(train_labels) // client_number
     avg_points_per_client_test = len(test_labels) // client_number
 
@@ -206,7 +210,6 @@ def split_label_skew(
         rearranged_data.append(client_data)
 
     return rearranged_data
-
 
 def split_feature_label_skew(
     train_features: torch.Tensor,
@@ -268,18 +271,7 @@ def split_feature_label_skew(
     remaining_test_labels = test_labels
 
     for i in range(client_number):
-        
-        # For the last client, take all remaining data
-        if i == client_number - 1:
-
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+        print(f"Client {i} feature distributions:") if show_distribution else None
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -315,7 +307,7 @@ def split_feature_label_skew(
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
             
-            print(dict(Counter(total_colors))) if show_distribution else None
+            print(dict(Counter(total_colors)),"\n") if show_distribution else None
 
             # Split the total_colors list into train and test
             train_colors = total_colors[:len_train]
@@ -390,8 +382,18 @@ def split_feature_skew_unbalanced(
     basic_split_data_train = split_unbalanced(train_features, train_labels, client_number, std_dev, permute)
     basic_split_data_test = split_unbalanced(test_features, test_labels, client_number, std_dev, permute)
 
+    if show_distribution:
+        print("Showing unbalanced numbers of data points..") if show_distribution else None
+        client_Count = 0
+        for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+            print(f"Client {client_Count} Train: {len(client_data_train['labels'])} Test: {len(client_data_test['labels'])}")
+            client_Count += 1
+
     # Process train and test splits with rotations if required
     if set_rotation:
+        client_Count = 0
+        print("Showing rotation distributions..") if show_distribution else None
+
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
             len_train = len(client_data_train['labels'])
@@ -401,7 +403,8 @@ def split_feature_skew_unbalanced(
                 np.random.uniform(scaling_rotation_low,scaling_rotation_high), random_order
                 )
             
-            print(dict(Counter(total_rotations))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
+            client_Count += 1
 
             # Split the total_rotations list into train and test
             train_rotations = total_rotations[:len_train]
@@ -411,6 +414,9 @@ def split_feature_skew_unbalanced(
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
 
     if set_color:
+        client_Count = 0
+        print("Showing color distributions..") if show_distribution else None
+
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
             len_train = len(client_data_train['labels'])
@@ -420,7 +426,8 @@ def split_feature_skew_unbalanced(
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
             
-            print(dict(Counter(total_colors))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
+            client_Count += 1
 
             # Split the total_colors list into train and test
             train_colors = total_colors[:len_train]

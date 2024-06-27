@@ -308,6 +308,9 @@ def load_split_datasets(
         raise ValueError("mode must be 'auto' or 'manual'")   
 
     if show_labels:
+        print("Count labels...")
+        print("Plotting and saving first 100 images each for datasets of first four clients...")
+        print("This is hardcoded, please refer to the last part of load_split_datasets if any error/ modification is needed...")
         draw_split_statistic(rearranged_data, plot_indices=[0,1,2,3],save=True,
                              file_name=f"{dataset_name}_{client_number}_{non_iid_type}")
 
