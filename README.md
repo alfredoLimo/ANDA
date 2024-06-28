@@ -106,7 +106,30 @@ Results: (showing data from first four clients, try to repeat it with the same s
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
 
 ## UNDER CONSTRUCTION
-- Dynamic/drifting non-IID datasets.
+**Dynamic/drifting non-IID datasets.**
+
+The training set and testing set are from different distributions.
+
+### trND_teDR
+> The training set is not drifting (unchanged), but the testing set drifted.   
+The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
+The distribution of testing is drifting.   
+**Training: A (large in size)**   
+**Testing: B (unseen)**   
+
+### trDA_teDR
+> The training set is drifting with accumulation, and the testing set drifted.   
+The distribution of training is drifting along epochs and accumulating.   
+The distribution of testing drifted (unseen to the client).   
+**Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC …**   
+**Testing: D (unseen)**   
+
+### trDA_teND
+> The training set is drifting with accumulation, and the testing set is not drifting.   
+The distribution of training is drifting along epochs and accumulating.   
+The distribution of testing is not drifting (seen at least once).   
+**Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC …**   
+**Testing: A/B/C (seen at least once)**   
 
 <table>
   <tr>
@@ -160,3 +183,4 @@ Results: (showing data from first four clients, try to repeat it with the same s
   </tr>
 *accumulation: drifting data are <b>appended to</b>, not replacing old datasets.
 </table>
+
