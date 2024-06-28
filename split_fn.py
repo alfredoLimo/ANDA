@@ -553,7 +553,8 @@ def split_feature_condition_skew(
     Random mode: randomly choose which labels are in the swapping pool. (#mixing_label_number)
     Non-random mode: a list of labels are provided to be swapped.
 
-    A scaling factor is randomly generated. When 1, dirichlet shuffling, when 0, no shuffling.
+    A scaling factor is randomly generated. (scaling_label_low to scaling_label_high)
+    When 1, dirichlet shuffling, when 0, no shuffling.
 
     Warning:
         The re-mapping possibility of labels are growing with the swapping pool.
@@ -595,9 +596,13 @@ def split_feature_condition_skew(
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
 
     rearranged_data = []
+
+    print("Showing the label mapping for each client..") if verbose else None
+
     for i in range(client_number):
 
         scaling_label = np.random.uniform(scaling_label_low, scaling_label_high)
+        print("Re-maping possibility for this client is: ", scaling_label) if verbose else None
 
         # Mapping from original label to the permuted label
         permuted_label_list = mixing_label_list.copy()
@@ -694,9 +699,13 @@ def split_feature_condition_skew_unbalanced(
     basic_split_data_test = split_unbalanced(test_features, test_labels, client_number, std_dev, permute)
 
     rearranged_data = []
+
+    print("Showing the label mapping for each client..") if verbose else None
+
     for i in range(client_number):
 
         scaling_label = np.random.uniform(scaling_label_low, scaling_label_high)
+        print("Re-maping possibility for this client is: ", scaling_label) if verbose else None
 
         # Mapping from original label to the permuted label
         permuted_label_list = mixing_label_list.copy()
@@ -798,6 +807,9 @@ def split_label_condition_skew(
 
     # Example usage within the split_label_condition_skew function
     if set_rotation:
+        client_Count = 0
+        print("Showing rotated labels for each client..") if verbose else None
+
         angles = [i * 360 / rotations for i in range(rotations)]
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
@@ -805,7 +817,8 @@ def split_label_condition_skew(
             rotation_mapping = {label: np.random.choice(angles) if label in rotated_label_list else 0.0
                                 for label in np.arange(0, max_label+1).tolist()}
             
-            print(f'Rotation Mapping: {rotation_mapping}') if verbose else None
+            print(f'Client {client_Count} rotation mapping: {rotation_mapping}') if verbose else None
+            client_Count += 1
 
             train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
             test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
@@ -814,6 +827,8 @@ def split_label_condition_skew(
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
 
     if set_color:
+        client_Count = 0
+        print("Showing colored labels for each client..") if verbose else None
 
         if colors == 1:
             letters = ['red']
@@ -827,7 +842,8 @@ def split_label_condition_skew(
             color_mapping = {label: np.random.choice(letters) if label in colored_label_list else "gray"
                                 for label in np.arange(0, max_label+1).tolist()}
             
-            print(f'Color Mapping: {color_mapping}') if verbose else None
+            print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
+            client_Count += 1
 
             train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
             test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
@@ -923,6 +939,9 @@ def split_label_condition_skew_unbalanced(
 
     # Example usage within the split_label_condition_skew function
     if set_rotation:
+        client_Count = 0
+        print("Showing rotated labels for each client..") if verbose else None
+
         angles = [i * 360 / rotations for i in range(rotations)]
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
@@ -930,7 +949,8 @@ def split_label_condition_skew_unbalanced(
             rotation_mapping = {label: np.random.choice(angles) if label in rotated_label_list else 0.0
                                 for label in np.arange(0, max_label+1).tolist()}
             
-            print(f'Rotation Mapping: {rotation_mapping}') if verbose else None
+            print(f'Client {client_Count} rotation mapping: {rotation_mapping}') if verbose else None
+            client_Count += 1
 
             train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
             test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
@@ -939,6 +959,8 @@ def split_label_condition_skew_unbalanced(
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
 
     if set_color:
+        client_Count = 0
+        print("Showing colored labels for each client..") if verbose else None
 
         if colors == 1:
             letters = ['red']
@@ -952,7 +974,8 @@ def split_label_condition_skew_unbalanced(
             color_mapping = {label: np.random.choice(letters) if label in colored_label_list else "gray"
                                 for label in np.arange(0, max_label+1).tolist()}
             
-            print(f'Color Mapping: {color_mapping}') if verbose else None
+            print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
+            client_Count += 1
 
             train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
             test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
@@ -1049,19 +1072,9 @@ def split_feature_condition_skew_with_label_skew(
     remaining_test_features = test_features
     remaining_test_labels = test_labels
 
-    for i in range(client_number):
-        
-        # For the last client, take all remaining data
-        if i == client_number - 1:
+    print("Showing label mapping for each client..") if verbose else None
 
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+    for i in range(client_number):
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -1078,8 +1091,8 @@ def split_feature_condition_skew_with_label_skew(
         permuted_label_list = mixing_label_list.copy()
         np.random.shuffle(permuted_label_list)
         label_map = {original: permuted for original, permuted in zip(mixing_label_list, permuted_label_list)}
-
-        print(f'Client {i+1} - Label Mapping: {label_map}') if verbose else None
+        print(f'Client {i} - Label Mapping: {label_map}') if verbose else None
+        print(f'Client {i} remapping probability: {scaling_swapping}\n') if verbose else None
 
         new_train_labels = sub_train_labels.clone()
         new_test_labels = sub_test_labels.clone()
@@ -1191,18 +1204,7 @@ def split_label_condition_skew_with_label_skew(
         letters = ['red', 'blue', 'green']
 
     for i in range(client_number):
-        
-        # For the last client, take all remaining data
-        if i == client_number - 1:
-
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+        print(f'Showing mappings for Client {i}') if verbose else None
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -1230,7 +1232,7 @@ def split_label_condition_skew_with_label_skew(
             color_mapping = {label: np.random.choice(letters) if label in colored_label_list else "gray"
                                 for label in np.arange(0, max_label+1).tolist()}
             
-            print(f'Color Mapping: {color_mapping}') if verbose else None
+            print(f'Color Mapping: {color_mapping}\n') if verbose else None
 
             train_colors = [color_mapping[label.item()] for label in sub_train_labels]
             test_colors = [color_mapping[label.item()] for label in sub_test_labels]
