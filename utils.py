@@ -52,7 +52,7 @@ def merge_data(
 
 def draw_split_statistic(
     data_list: torch.Tensor,
-    plot_indices: list = None,
+    plot_indices: list = [0,1,2,3],
     save: bool = False,
     save_dir: str = './statistic_plot',
     file_name: str = None
@@ -75,6 +75,7 @@ def draw_split_statistic(
         train_labels = data['train_labels']
         test_labels = data['test_labels']
         
+        
         train_label_counts = torch.tensor([train_labels.tolist().count(x) for x in range(10)])
         test_label_counts = torch.tensor([test_labels.tolist().count(x) for x in range(10)])
         
@@ -92,6 +93,8 @@ def draw_split_statistic(
             data = data_list[idx]
             train_features = data['train_features']
             train_labels = data['train_labels']
+            # train_features = data['test_features']
+            # train_labels = data['test_labels']
             
             num_images = min(100, train_features.shape[0])
             fig, axes = plt.subplots(10, 10, figsize=(15, 15))
@@ -203,7 +206,6 @@ def rotate_dataset(
     for img_tensor, degree in zip(dataset, degrees):
         # Convert the tensor to a PIL image
         img = transforms.ToPILImage()(img_tensor)
-        
         # Rotate the image
         rotated_img = img.rotate(degree)
         
