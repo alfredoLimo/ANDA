@@ -159,3 +159,37 @@ def split_trND_teDR_Px(
         rearranged_data.append(client_data)
             
     return rearranged_data
+
+def split_trND_teDR_Py(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    rotation_bank: int = 1,
+    color_bank: int = 1,
+    scaling_low: float = 0.5,
+    scaling_high: float = 0.5,
+    reverse_test: bool = False,
+    verbose: bool = True
+) -> list:
+    '''
+    Split the dataset into distributions as:
+        Training: A (large in size)
+        Testing: B (unseen)
+    with distribution difference in P(y)
+    for A SINGLE CLIENT. (overall skew among clients exists)
+
+    Args:
+
+    Description:
+        
+    Warning:
+
+        Balance the "unseen" level with scaling.    
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    '''
+    pass
