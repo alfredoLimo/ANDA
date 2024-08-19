@@ -243,7 +243,7 @@ def split_trND_teDR_Py(
             print("Testing dataset label preference: ",test_label_list)
             print("Testing dataset probabilities: ",test_probabilities)
 
-        # Shuffling
+        # Shuffling due to CHOICES
         permuted_train_indices = torch.randperm(len(train_labels))
         permuted_train_features = train_features[permuted_train_indices]
         permuted_train_labels = train_labels[permuted_train_indices]
@@ -303,5 +303,107 @@ def split_trND_teDR_Py(
 
     return rearranged_data
 
+def split_trND_teDR_Px_y(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    mixing_num: int = 4,
+    scaling_low: float = 0.5,
+    scaling_high: float = 0.5,
+    verbose: bool = True
+) -> list:
+    """
+    Split the dataset into distributions as:
+        Training: A (large in size)
+        Testing: B (unseen)
+    with distribution difference in P(x|y)
+    for A SINGLE CLIENT. (overall skew among clients exists)
+
+    Args:
+        train_features (torch.Tensor): The training features.
+        train_labels (torch.Tensor): The training labels.
+        test_features (torch.Tensor): The testing features.
+        test_labels (torch.Tensor): The testing labels.
+        client_number (int): The number of clients.
+        mixing_num (int): The number of mixed labels.
+        scaling_low (float): The lower bound of scaling.
+        scaling_high (float): The upper bound of scaling.
+        verbose (bool): Whether to print the distribution information.
+
+    Description:
+        For each client, train and test datasets are assigned with diff random label-swapping partterns.
+        
+    Warning:
+        EXTENSION: NO. Datapoints not replicated overall.
+        SAMPLE: YES. Datapoints not ever repeated for different clients.
+        CHOICES: NO. (contrast to SAMPLE)
+
+        Balance the "unseen" level with scaling.
+
+        #TODO EXISTING KNOWN BUG for EMNIST (label doesn't start from 0)   
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    
+    """
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert 0 <= scaling_low <= scaling_high <= 1, "Scaling factor must be between 0 and 1."
+    assert mixing_num > 0, "The number of labels to swap must be larger than 0."
+    max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
+    mixing_label_list = np.random.choice(range(0, max_label), mixing_num,replace=False).tolist()
+
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+    rearranged_data = []
+
+    print("Showing the label mapping for each client..") if verbose else None
 
 
+    for i in range(client_number):
+
+        scaling_label = np.random.uniform(scaling_low, scaling_high)
+        print("Re-maping possibility for this client is: ", scaling_label) if verbose else None
+
+        # Mapping from original label to the permuted label for training data
+        permuted_label_list_train = mixing_label_list.copy()
+        np.random.shuffle(permuted_label_list_train)
+        label_map_train = {original: permuted for original, permuted in zip(mixing_label_list, permuted_label_list_train)}
+
+        # Mapping from original label to the permuted label for testing data
+        permuted_label_list_test = mixing_label_list.copy()
+        np.random.shuffle(permuted_label_list_test)
+        label_map_test = {original: permuted for original, permuted in zip(mixing_label_list, permuted_label_list_test)}
+
+        print(f'Client {i+1} - Train Label Mapping: {label_map_train}') if verbose else None
+        print(f'Client {i+1} - Test Label Mapping: {label_map_test}') if verbose else None
+
+        new_train_labels = basic_split_data_train[i]['labels'].clone()
+        new_test_labels = basic_split_data_test[i]['labels'].clone()
+        
+        for original, permuted_train in label_map_train.items():
+            # Replace train labels based on the scaling_label probability
+            train_mask = (basic_split_data_train[i]['labels'] == original)
+            random_values_train = torch.rand(train_mask.sum().item())
+            new_train_labels[train_mask] = torch.where(random_values_train <= scaling_label, permuted_train, original)
+
+        for original, permuted_test in label_map_test.items():
+            # Replace test labels based on the scaling_label probability
+            test_mask = (basic_split_data_test[i]['labels'] == original)
+            random_values_test = torch.rand(test_mask.sum().item())
+            new_test_labels[test_mask] = torch.where(random_values_test <= scaling_label, permuted_test, original)
+
+        client_data = {
+            'train_features': basic_split_data_train[i]['features'],
+            'train_labels': new_train_labels,
+            'test_features': basic_split_data_test[i]['features'],
+            'test_labels': new_test_labels
+        }
+
+        rearranged_data.append(client_data)
+    
+    return rearranged_data
