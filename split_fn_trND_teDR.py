@@ -407,3 +407,118 @@ def split_trND_teDR_Px_y(
         rearranged_data.append(client_data)
     
     return rearranged_data
+
+def split_trND_teDR_Py_x(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    rotation_bank: int = 2,
+    color_bank: int = 2,
+    rotated_label_number: int = 2,
+    colored_label_number: int = 2,
+    verbose: bool = True
+) -> list:
+    '''
+    Split the dataset into distributions as:
+        Training: A (large in size)
+        Testing: B (unseen)
+    with distribution difference in P(y|x)
+    for A SINGLE CLIENT. (overall skew among clients exists)
+
+    Args:
+        train_features (torch.Tensor): The training features.
+        train_labels (torch.Tensor): The training labels.
+        test_features (torch.Tensor): The testing features.
+        test_labels (torch.Tensor): The testing labels.
+        client_number (int): The number of clients.
+        rotation_bank (int): The number of rotation patterns. 1 as no rotation.
+        color_bank (int): The number of color patterns. 1 as no color.
+        rotated_label_number (int): The number of labels to rotate.
+        colored_label_number (int): The number of labels to color.
+        verbose (bool): Whether to print the distribution information.
+
+    Description:
+        For labels to be rotated and colored, a random choice will be made from the bank.
+        And this pattern diffs between train and test.
+        
+    Warning:
+        EXTENSION: NO. Datapoints not replicated overall.
+        SAMPLE: YES. Datapoints not ever repeated for different clients.
+        CHOICES: NO. (contrast to SAMPLE)
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    '''
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert rotation_bank > 0, "The number of rotation patterns must be greater than 0."
+    assert color_bank > 0, "The number of color patterns must be greater than 0."
+    max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
+    rotated_label_list = np.random.choice(range(0, max_label), rotated_label_number,replace=False).tolist()
+    colored_label_list = np.random.choice(range(0, max_label), colored_label_number,replace=False).tolist()
+    
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
+    # generate pattern bank
+    angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+
+    if color_bank == 1:
+        colors = ['gray']
+    elif color_bank == 2:
+        colors = ['red', 'blue']
+    elif color_bank == 3:
+        colors = ['red', 'blue', 'green']
+    else:
+        raise ValueError("The number of color patterns must be 1, 2, or 3.")
+    
+    client_Count = 0
+    for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+
+        angle_color_map_train = {i: {'angle': np.random.choice(angles) if i in rotated_label_list else 0.0, 
+                            'color': np.random.choice(colors) if i in colored_label_list else 'gray'} 
+                    for i in range(max_label)}
+        
+        print(f'Client {client_Count} train mapping: {angle_color_map_train}') if verbose else None
+
+        angle_color_map_test = {i: {'angle': np.random.choice(angles) if i in rotated_label_list else 0.0, 
+                            'color': np.random.choice(colors) if i in colored_label_list else 'gray'} 
+                    for i in range(max_label)}
+        
+        print(f'Client {client_Count} test mapping: {angle_color_map_test}',"\n") if verbose else None
+
+        client_Count += 1
+
+        train_rotations = [angle_color_map_train[label.item()]['angle'] for label in client_data_train['labels']]
+        train_colors = [angle_color_map_train[label.item()]['color'] for label in client_data_train['labels']]
+        test_rotations = [angle_color_map_test[label.item()]['angle'] for label in client_data_test['labels']]
+        test_colors = [angle_color_map_test[label.item()]['color'] for label in client_data_test['labels']]
+
+        client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
+        client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
+        client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
+        client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
+    
+    rearranged_data = []
+
+    # Iterate through the indices of the lists
+    for i in range(client_number):
+        # Create a new dictionary for each client
+        client_data = {
+            'train_features': basic_split_data_train[i]['features'],
+            'train_labels': basic_split_data_train[i]['labels'],
+            'test_features': basic_split_data_test[i]['features'],
+            'test_labels': basic_split_data_test[i]['labels']
+        }
+        # Append the new dictionary to the list
+        rearranged_data.append(client_data)
+            
+    return rearranged_data
+
+
+    
+
