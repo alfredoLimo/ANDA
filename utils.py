@@ -54,7 +54,7 @@ def draw_split_statistic(
     data_list: torch.Tensor,
     plot_indices: list = [0,1,2,3],
     save: bool = False,
-    save_dir: str = './statistic_plot',
+    save_dir: str = './anda_plot',
     file_name: str = None
 ) -> None:
     '''
@@ -62,19 +62,19 @@ def draw_split_statistic(
     
     Args:
         data_list (list): A list of dictionaries where each dictionary contains the features and labels for each client.
-                        * Output of split_ fns
+                          * Output of split_fns
         plot_indices (list): A list of indices to plot the first 100 images for each client.
         save (bool): If True, the images will be saved to the save_dir.
         save_dir (str): The directory to save the images.
 
     Warning:
         Working for only 10 classes dataset. (EMNIST e CIFAR100 NOT SUPPORTED)
+        #TODO NOT SURE WHY NOW
     '''
     # Print label counts for each dictionary
     for i, data in enumerate(data_list):
         train_labels = data['train_labels']
         test_labels = data['test_labels']
-        
         
         train_label_counts = torch.tensor([train_labels.tolist().count(x) for x in range(10)])
         test_label_counts = torch.tensor([test_labels.tolist().count(x) for x in range(10)])
@@ -91,10 +91,10 @@ def draw_split_statistic(
 
         if idx < len(data_list):
             data = data_list[idx]
+
+            # training data plot
             train_features = data['train_features']
             train_labels = data['train_labels']
-            # train_features = data['test_features']
-            # train_labels = data['test_labels']
             
             num_images = min(100, train_features.shape[0])
             fig, axes = plt.subplots(10, 10, figsize=(15, 15))
@@ -118,9 +118,40 @@ def draw_split_statistic(
             plt.tight_layout(rect=[0, 0, 1, 0.96])
             plt.show()
             if save:
-                save_path = os.path.join(save_dir, f'{file_name}_{idx}_images.png')
+                save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_train_data_plot.png')
                 plt.savefig(save_path)
                 print(f"Saved images to {save_path}")
+
+            # testing data plot
+            test_features = data['test_features']
+            test_labels = data['test_labels']
+            
+            num_images = min(100, test_features.shape[0])
+            fig, axes = plt.subplots(10, 10, figsize=(15, 15))
+            fig.suptitle(f'Dictionary {idx} - First {num_images} Testing Images', fontsize=16)
+            
+            for i in range(num_images):
+                ax = axes[i // 10, i % 10]
+                image = test_features[i]
+                
+                if image.shape[0] == 3:
+                    # For CIFAR (3, H, W) -> (H, W, 3)
+                    image = image.permute(1, 2, 0).numpy()
+                else:
+                    # For MNIST (1, H, W) -> (H, W)
+                    image = image.squeeze().numpy()
+                
+                ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
+                ax.set_title(test_labels[i].item())
+                ax.axis('off')
+            
+            plt.tight_layout(rect=[0, 0, 1, 0.96])
+            plt.show()
+            if save:
+                save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_test_data_plot.png')
+                plt.savefig(save_path)
+                print(f"Saved images to {save_path}")
+            
 
 def load_full_datasets(
     dataset_name: str = "MNIST",
@@ -289,8 +320,7 @@ def split_basic(
     # Randomly shuffle the dataset while maintaining correspondence between features and labels
     if permute:
         indices = torch.randperm(len(features))
-        features = features[indices]
-        labels = labels[indices]
+        features, labels = features[indices], labels[indices]
     
     # Calculate the number of samples per client
     samples_per_client = len(features) // client_number

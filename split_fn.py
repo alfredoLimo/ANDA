@@ -253,7 +253,7 @@ def split_feature_label_skew(
         show_distribution (bool): Whether to print the distribution of the assigned features.
 
     Warning:
-        This should not be used for building concept drift datasets, though it is unavoidable.
+        This should not be used for building concept drift datasets, though unavoidable.
     
     Returns:
         list: A list of dictionaries where each dictionary contains the features and labels for each client.
@@ -557,7 +557,7 @@ def split_feature_condition_skew(
     When 1, dirichlet shuffling, when 0, no shuffling.
 
     Warning:
-        The re-mapping possibility of labels are growing with the swapping pool.
+        The re-mapping choices of labels are growing with the swapping pool.
         E.g. When the swapping pool has [1,2,3]. Label '3' could be swapped with both '1' or '2'.
 
         USE Non-random mode for EMNIST, which is the only dataset doesn't start label from 0.
@@ -580,7 +580,7 @@ def split_feature_condition_skew(
     """
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
-    assert scaling_label_high >= scaling_label_low, "High scaling must be larger than low scaling."
+    assert 0 <= scaling_label_low <= scaling_label_high <= 1, "Scaling factor must be between 0 and 1."
     max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
 
     if random_mode:
@@ -683,6 +683,7 @@ def split_feature_condition_skew_unbalanced(
     """
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert 0 <= scaling_label_low <= scaling_label_high <= 1, "Scaling factor must be between 0 and 1."
     max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
 
     if random_mode:
@@ -739,7 +740,6 @@ def split_feature_condition_skew_unbalanced(
     
     return rearranged_data
 
-
 def split_label_condition_skew(
     train_features: torch.Tensor,
     train_labels: torch.Tensor,
@@ -788,7 +788,7 @@ def split_label_condition_skew(
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
     assert rotations > 1, "Must have at least 2 rotations. Otherwise turn it off."
-    assert colors == 1 or colors == 2 or colors == 3, "The number of colors must be 1, 2, or 3."
+    assert 1 <= colors <= 3, "The number of colors must be 1, 2, or 3."
     max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
 
     if random_mode:

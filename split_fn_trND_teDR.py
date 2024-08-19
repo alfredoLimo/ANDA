@@ -1,6 +1,6 @@
 import numpy as np
 from collections import Counter
-from scipy.stats import truncnorm
+# from scipy.stats import truncnorm
 
 import torch
 import torch.nn.functional as F
@@ -59,7 +59,10 @@ def split_trND_teDR_Px(
         Each sub-dataset choose any distribution of the patterns.
         
     Warning:
-        SAMPLE, NOT CHOICES: original datapoints are not repeated.
+        EXTENSION: NO. Datapoints not replicated overall.
+        SAMPLE: YES. Datapoints not ever repeated for different clients.
+        CHOICES: NO. (contrast to SAMPLE)
+        
         Recommended bank size is:
             rotation 2 * color 2 = 4, or
             rotation 2 * color 3 = 6, or
@@ -76,6 +79,7 @@ def split_trND_teDR_Px(
     assert rotation_bank > 0, "The number of rotation patterns must be greater than 0."
     assert color_bank > 0, "The number of color patterns must be greater than 0."
     assert scaling_high >= scaling_low, "The upper bound of scaling must be greater than the lower bound."
+    print("Reverse mode, creating strong unseen level..") if verbose and reverse_test else None
 
     # generate basic split
     basic_split_data_train = split_basic(train_features, train_labels, client_number)
@@ -96,7 +100,7 @@ def split_trND_teDR_Px(
     pattern_bank = [[angle, color] for angle in angles for color in colors]
     # assign patterns to each client
     client_Count = 0
-    print("Showing patterns for each client..") if verbose else None
+    print("Showing patterns for each client..\n") if verbose else None
 
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
         print(f"Client: {client_Count}") if verbose else None
@@ -123,8 +127,7 @@ def split_trND_teDR_Px(
 
 
         # for testing test
-        test_pattern = np.random.permutation(pattern_bank).tolist()
-        test_pattern = list(reversed(train_pattern)) if reverse_test else test_pattern
+        test_pattern = list(reversed(train_pattern)) if reverse_test else np.random.permutation(pattern_bank).tolist()
         test_pattern = [(float(angle), color) for angle, color in test_pattern]
 
         scaled_values = np.arange(len(pattern_bank), 0, -1) * np.random.uniform(scaling_low,scaling_high)
@@ -132,14 +135,13 @@ def split_trND_teDR_Px(
         test_prob = exp_values / np.sum(exp_values)
 
         print("Test bank: ", test_pattern) if verbose else None
-        print("Assigned probability: ", test_prob) if verbose else None
+        print("Assigned probability: ", test_prob,"\n") if verbose else None
 
         indices = np.arange(len(test_pattern))
         sampled_indices = np.random.choice(indices, size=len(client_data_test['labels']), p=test_prob)
         sampled_pattern = [test_pattern[i] for i in sampled_indices]
 
-        angles_assigned = [item[0] for item in sampled_pattern]
-        colors_assigned = [item[1] for item in sampled_pattern]
+        angles_assigned, colors_assigned = map(list, zip(*sampled_pattern))
         client_data_test['features'] = rotate_dataset(client_data_test['features'], angles_assigned)
         client_data_test['features'] = color_dataset(client_data_test['features'], colors_assigned)
 
@@ -166,8 +168,6 @@ def split_trND_teDR_Py(
     test_features: torch.Tensor,
     test_labels: torch.Tensor,
     client_number: int = 10,
-    rotation_bank: int = 1,
-    color_bank: int = 1,
     scaling_low: float = 0.5,
     scaling_high: float = 0.5,
     reverse_test: bool = False,
@@ -181,10 +181,24 @@ def split_trND_teDR_Py(
     for A SINGLE CLIENT. (overall skew among clients exists)
 
     Args:
+        train_features (torch.Tensor): The training features.
+        train_labels (torch.Tensor): The training labels.
+        test_features (torch.Tensor): The testing features.
+        test_labels (torch.Tensor): The testing labels.
+        client_number (int): The number of clients.
+        scaling_low (float): The lower bound of scaling.
+        scaling_high (float): The upper bound of scaling.
+        reverse_test (bool): Testing and training use reverse patterns. (used to create strong unseen level)
+        verbose (bool): Whether to print the distribution information.
 
     Description:
+        Two probability distributions of the labels will be created for each client, for both training and testing.
+        To have a strong unseen level in testing, set reverse_test as True.
         
     Warning:
+        EXTENSION: NO. Datapoints not replicated overall.
+        SAMPLE: NO. (contrast to SAMPLE)
+        CHOICES: YES. Datapoints may repeat for different clients.
 
         Balance the "unseen" level with scaling.    
 
@@ -192,4 +206,102 @@ def split_trND_teDR_Py(
         list: A list of dictionaries where each dictionary contains the features and labels for each client.
                 Both train and test.
     '''
-    pass
+    # Ensure the features and labels have the same number of samples
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert scaling_high >= scaling_low, "High scaling must be larger than low scaling."
+    assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault"
+    label_num = torch.unique(train_labels).size(0)
+
+    print("Reverse mode, creating strong unseen level..") if verbose and reverse_test else None
+        
+    avg_points_per_client_train = len(train_labels) // client_number
+    avg_points_per_client_test = len(test_labels) // client_number
+    rearranged_data = []
+
+    for i in range(client_number):
+
+        print(f"Client: {i}") if verbose else None
+
+        # generate train and test patterns
+        train_label_list = torch.randperm(label_num).tolist()
+        test_label_list = list(reversed(train_label_list)) if reverse_test else torch.randperm(label_num).tolist()
+
+        # Apply softmax to get the probabilities
+        train_scaled_values = np.arange(label_num, 0, -1) * np.random.uniform(scaling_low,scaling_high)
+        test_scaled_values = np.arange(label_num, 0, -1) * np.random.uniform(scaling_low,scaling_high)
+
+        train_exp_values = np.exp(train_scaled_values)
+        test_exp_values = np.exp(test_scaled_values)
+
+        train_probabilities = train_exp_values / np.sum(train_exp_values)
+        test_probabilities = test_exp_values / np.sum(test_exp_values)
+
+        if verbose:
+            print("Training dataset label preference: ",train_label_list)
+            print("Training dataset probabilities: ",train_probabilities)
+            print("Testing dataset label preference: ",test_label_list)
+            print("Testing dataset probabilities: ",test_probabilities)
+
+        # Shuffling
+        permuted_train_indices = torch.randperm(len(train_labels))
+        permuted_train_features = train_features[permuted_train_indices]
+        permuted_train_labels = train_labels[permuted_train_indices]
+
+        permuted_test_indices = torch.randperm(len(test_labels))
+        permuted_test_features = test_features[permuted_test_indices]
+        permuted_test_labels = test_labels[permuted_test_indices]
+
+        # Initialize the data lists
+        client_train_features = []
+        client_train_labels = []
+        client_test_features = []
+        client_test_labels = []
+
+        # Training dataset
+        selected_train_points = 0
+        train_idx = 0
+        while selected_train_points < avg_points_per_client_train:
+            current_train_feature = permuted_train_features[train_idx]
+            current_train_label = permuted_train_labels[train_idx]
+
+            train_label_index = train_label_list.index(current_train_label.item())
+            train_label_prob = train_probabilities[train_label_index]
+
+            # If the random number is less than the probability, we select this point
+            if np.random.rand() < train_label_prob:
+                client_train_features.append(current_train_feature.unsqueeze(0))
+                client_train_labels.append(current_train_label.unsqueeze(0))
+                selected_train_points += 1
+
+            train_idx = (train_idx + 1) % len(permuted_train_labels)
+
+        # Testing dataset
+        selected_test_points = 0
+        test_idx = 0
+        while selected_test_points < avg_points_per_client_test:
+            current_test_feature = permuted_test_features[test_idx]
+            current_test_label = permuted_test_labels[test_idx]
+
+            test_label_index = test_label_list.index(current_test_label.item())
+            test_label_prob = test_probabilities[test_label_index]
+
+            # If the random number is less than the probability, we select this point
+            if np.random.rand() < test_label_prob:
+                client_test_features.append(current_test_feature.unsqueeze(0))
+                client_test_labels.append(current_test_label.unsqueeze(0))
+                selected_test_points += 1
+
+            test_idx = (test_idx + 1) % len(permuted_test_labels)
+
+        rearranged_data.append({
+            'train_features': torch.cat(client_train_features, dim=0),
+            'train_labels': torch.cat(client_train_labels, dim=0),
+            'test_features': torch.cat(client_test_features, dim=0),
+            'test_labels': torch.cat(client_test_labels, dim=0),
+        })
+
+    return rearranged_data
+
+
+
