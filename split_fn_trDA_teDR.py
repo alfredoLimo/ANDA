@@ -23,13 +23,11 @@ def split_trDA_teDR_Px(
     client_number: int = 10,
     rotation_bank: int = 1,
     color_bank: int = 1,
-    DA_dataset_scaling: float = 1.0,
+    DA_dataset_scaling: float = 1.5,
     DA_epoch_locker_num: int = 10,
     DA_random_locker: bool = False,
     DA_max_dist: int = 2,
     DA_continual_divergence: bool = False,
-    px_scaling_low: float = 0.5,
-    px_scaling_high: float = 0.5,
     verbose: bool = True
 ) -> list:
     '''
@@ -48,8 +46,6 @@ def split_trDA_teDR_Px(
         rotation_bank (int): The number of rotation patterns. 1 as no rotation.
         color_bank (int): The number of color patterns. 1 as no color.
         [DA_parameters]: Details in Description.
-        px_scaling_low (float): The lower bound of the scaling factor for P(x).
-        px_scaling_high (float): The upper bound of the scaling factor for P(x).
         verbose (bool): Whether to print the distribution information.
 
     Description:
@@ -86,10 +82,11 @@ def split_trDA_teDR_Px(
 
     Returns:
         A list of dictionaries contains:
-            train set,
-            test set,
+            train, (bool) whether it is training set
+            dataset,
             client number,
-            epoch locker indicator
+            epoch locker indicator, (float) to tell the growth time
+            epoch locker order: (int) to tell the order of current subset
     '''
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
@@ -98,7 +95,6 @@ def split_trDA_teDR_Px(
     assert DA_dataset_scaling >= 1, "Invalid downscaling."
     assert DA_epoch_locker_num > 0, "The number of epoch lockers must be greater than 0."
     assert 1 < DA_max_dist < rotation_bank * color_bank, "Distribution assignment out of range."
-    assert px_scaling_low <= px_scaling_high, "Invalid scaling range."
 
     # generate pattern bank
     angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
@@ -115,19 +111,33 @@ def split_trDA_teDR_Px(
     pattern_bank = {i + 1: [angle, color] for i, (angle, color)
                     in enumerate([(angle, color) for angle in angles for color in colors])}
     
-    print("Pattern bank:") if verbose else None
-    print('\n'.join(f"{key}: {value}" for key, value in pattern_bank.items())) if verbose else None
+    print("Pattern bank:\n", '\n'.join(f"{key}: {value}" for key, value in pattern_bank.items())) if verbose else None
 
     # generate basic split
     basic_split_data_train = split_basic(train_features, train_labels, client_number)
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
     rearranged_data = []
-
     client_Count = 0
-
 
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
         print(f"Client: {client_Count}") if verbose else None
+        # training dataset scaling
+        original_train_feature = client_data_train['features']
+        original_train_label = client_data_train['labels']
+        indices = torch.randint(0, original_train_label.shape[0],
+                                (int(original_train_label.shape[0] * (DA_dataset_scaling - 1)),))
+        sampled_data = original_train_feature[indices]
+        sampled_label = original_train_label[indices]
+
+        cur_train_feature = torch.cat((original_train_feature, sampled_data), dim=0)
+        cur_train_label = torch.cat((original_train_label, sampled_label), dim=0)
+        permuted_indices = torch.randperm(cur_train_label.shape[0])
+        cur_train_feature = cur_train_feature[permuted_indices]
+        cur_train_label = cur_train_label[permuted_indices]
+
+        cur_test_feature = client_data_test['features']
+        cur_test_label = client_data_test['labels']
 
         # generate drifting
         dist_bank = list(range(1, rotation_bank * color_bank + 1))
@@ -135,49 +145,71 @@ def split_trDA_teDR_Px(
         dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        
+        lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
+                else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
 
-        print("Train distribution: ", train_dist) if verbose else None
-        print("Test distribution: ", test_dist) if verbose else None
+        print("Train distribution: ", train_dist,
+              "\nTest distribution: ", test_dist,
+              "\nEpoch lockers: ", lockers,
+              "\n") if verbose else None
 
+        # training test
+        feature_chunks = torch.chunk(cur_train_feature, DA_epoch_locker_num, dim=0)
+        label_chunks = torch.chunk(cur_train_label, DA_epoch_locker_num, dim=0)
 
-        # for training test
-        train_pattern = np.random.permutation(pattern_bank).tolist()
-        train_pattern = [(float(angle), color) for angle, color in train_pattern]
+        # Initialize cumulative feature and label tensors
+        cumulative_features = None
+        cumulative_labels = None
 
-        scaled_values = np.arange(len(pattern_bank), 0, -1) * np.random.uniform(scaling_low,scaling_high)
-        exp_values = np.exp(scaled_values)
-        train_prob = exp_values / np.sum(exp_values)
+        # Loop through feature chunks and label chunks
+        for i, (feature_chunk, label_chunk) in enumerate(zip(feature_chunks, label_chunks)):
+            # Get angle and color from the pattern bank based on the train_dist
+            angle, color = pattern_bank[train_dist[i]]
 
-        print("Train bank: ", train_pattern) if verbose else None
-        print("Assigned probability: ", train_prob) if verbose else None
+            # Apply rotation and color transformations
+            feature_chunk = rotate_dataset(feature_chunk, [float(angle)] * feature_chunk.shape[0])
+            feature_chunk = color_dataset(feature_chunk, [color] * feature_chunk.shape[0])
 
-        indices = np.arange(len(train_pattern))
-        sampled_indices = np.random.choice(indices, size=len(client_data_train['labels']), p=train_prob)
-        sampled_pattern = [train_pattern[i] for i in sampled_indices]
+            # Concatenate cumulatively with previous chunks
+            if cumulative_features is None:
+                cumulative_features = feature_chunk
+                cumulative_labels = label_chunk
+            else:
+                cumulative_features = torch.cat((cumulative_features, feature_chunk), dim=0)
+                cumulative_labels = torch.cat((cumulative_labels, label_chunk), dim=0)
 
-        angles_assigned = [item[0] for item in sampled_pattern]
-        colors_assigned = [item[1] for item in sampled_pattern]
-        client_data_train['features'] = rotate_dataset(client_data_train['features'], angles_assigned)
-        client_data_train['features'] = color_dataset(client_data_train['features'], colors_assigned)
+            permuted_indices = torch.randperm(cumulative_labels.shape[0])
+            cumulative_features = cumulative_features[permuted_indices]
+            cumulative_labels = cumulative_labels[permuted_indices]
 
+            # Append the cumulative data to rearranged_data
+            rearranged_data.append({
+                'train': True,
+                'features': cumulative_features,
+                'labels': cumulative_labels,
+                'client_number': client_Count,
+                'epoch_locker_indicator': lockers[i],
+                'epoch_locker_order': i
+            })
 
-        # # for testing test
-        # test_pattern = list(reversed(train_pattern)) if reverse_test else np.random.permutation(pattern_bank).tolist()
-        # test_pattern = [(float(angle), color) for angle, color in test_pattern]
+            if client_Count == 0:
+                print(cumulative_features.shape, cumulative_labels.shape)
 
-        # scaled_values = np.arange(len(pattern_bank), 0, -1) * np.random.uniform(scaling_low,scaling_high)
-        # exp_values = np.exp(scaled_values)
-        # test_prob = exp_values / np.sum(exp_values)
+        # testing set
+        angle, color = pattern_bank[test_dist]
+        cur_test_feature = rotate_dataset(cur_test_feature, [float(angle)] * cur_test_feature.shape[0])
+        cur_test_feature = color_dataset(cur_test_feature, [color] * cur_test_feature.shape[0])
 
-        # print("Test bank: ", test_pattern) if verbose else None
-        # print("Assigned probability: ", test_prob,"\n") if verbose else None
-
-        # indices = np.arange(len(test_pattern))
-        # sampled_indices = np.random.choice(indices, size=len(client_data_test['labels']), p=test_prob)
-        # sampled_pattern = [test_pattern[i] for i in sampled_indices]
-
-        # angles_assigned, colors_assigned = map(list, zip(*sampled_pattern))
-        # client_data_test['features'] = rotate_dataset(client_data_test['features'], angles_assigned)
-        # client_data_test['features'] = color_dataset(client_data_test['features'], colors_assigned)
+        rearranged_data.append({
+            'train': False,
+            'features': cur_test_feature,
+            'labels': cur_test_label,
+            'client_number': client_Count,
+            'epoch_locker_indicator': -1.0,
+            'epoch_locker_order': -1
+        })
 
         client_Count += 1
+
+    return rearranged_data
