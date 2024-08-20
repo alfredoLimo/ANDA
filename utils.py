@@ -574,3 +574,22 @@ def create_sub_dataset(
     remaining_labels = labels[remaining_indices]
 
     return sub_features, sub_labels, remaining_features, remaining_labels
+
+def generate_DA_dist(
+    dist_bank: list,
+    DA_epoch_locker_num: int,
+    DA_max_dist: int,
+    DA_continual_divergence: bool
+) -> list:
+    lst = []
+    while len(lst) < DA_epoch_locker_num:
+        # reaching DA_max_dist
+        if len(set(lst)) == DA_max_dist:
+            lst.append(lst[-1]) if DA_continual_divergence else lst.append(np.random.choice(lst))
+        else:
+            # update dist_bank 
+            if len(lst) > 0 and DA_continual_divergence:
+                dist_bank = [x for x in dist_bank if x not in lst or x == lst[-1]]
+            lst.append(np.random.choice(dist_bank))
+    
+    return lst
