@@ -600,6 +600,7 @@ def draw_split_statistic_dy(
     data_list: list,
     client: int = 0,
     locker_indices: list = [0,1,2,3],
+    count: bool = True,
     save: bool = False,
     save_dir: str = './anda_plot',
     file_name: str = None
@@ -610,47 +611,51 @@ def draw_split_statistic_dy(
     Args:
         data_list (list): A list of dictionaries where each dictionary contains the features and labels for each client.
                           * Output of split_fns
-        client (int): The client index to plot the images for.
+        client (int): The client index to plot the images.
         locker_indices (list): A list of indices to plot the images.
+        count (bool): If True, print the label counts.
         save (bool): If True, the images will be saved to the save_dir.
         save_dir (str): The directory to save the images.
+        file_name (str): The name of the file to save the images.
 
     Warning:
-        Working for only 10 classes dataset. (EMNIST e CIFAR100 NOT SUPPORTED)
-        #TODO NOT SURE WHY NOW
+        Work with 10 classes dataset. (EMNIST e CIFAR100 NOT #TODO SUPPORTED)
     '''
+
     # Print label counts for each dictionary
-    for i, data in enumerate(data_list):
-        train_labels = data['train_labels']
-        test_labels = data['test_labels']
-        
-        train_label_counts = torch.tensor([train_labels.tolist().count(x) for x in range(10)])
-        test_label_counts = torch.tensor([test_labels.tolist().count(x) for x in range(10)])
-        
-        print(f"Client {i}:")
-        print("Training label counts:", train_label_counts)
-        print("Test label counts:", test_label_counts)
-        print("\n")
-    
+    if count:
+        for _, data in enumerate(data_list):
+            # Count the label occurrences for each class (assuming 10 classes)
+            label_counts = torch.tensor([data['labels'].tolist().count(x) for x in range(10)])
+
+            print(
+                f"Client {data['client_number']} | {'Train' if data['train'] else 'Test'} | "
+                f"Epoch Locker Order: {data['epoch_locker_order']} | "
+                f"Label Counts: {label_counts.tolist()}"
+            )
+
     # If plot_indices is provided, plot the first 100 images with labels for the specified dictionaries
-    for idx in plot_indices:
-        if save and not os.path.exists(save_dir):
-            os.makedirs(save_dir)
+    for _ , data in enumerate(data_list):
+        # Check if the current client matches and if the epoch_locker_order is in locker_indices
+        if data['client_number'] == client and data['epoch_locker_order'] in locker_indices:
 
-        if idx < len(data_list):
-            data = data_list[idx]
+            if save and not os.path.exists(save_dir):
+                os.makedirs(save_dir)
 
-            # training data plot
-            train_features = data['train_features']
-            train_labels = data['train_labels']
+            # Features and labels are based on the current data dictionary
+            features = data['features']
+            labels = data['labels']
             
-            num_images = min(100, train_features.shape[0])
+            # Determine whether we are dealing with training or testing data based on 'train'
+            data_type = 'Training' if data['train'] else 'Testing'
+
+            num_images = min(100, features.shape[0])
             fig, axes = plt.subplots(10, 10, figsize=(15, 15))
-            fig.suptitle(f'Dictionary {idx} - First {num_images} Training Images', fontsize=16)
-            
+            fig.suptitle(f'Client {data["client_number"]} | {data_type} | Epoch Locker Order: {data["epoch_locker_order"]} | First {num_images} Images', fontsize=16)
+
             for i in range(num_images):
                 ax = axes[i // 10, i % 10]
-                image = train_features[i]
+                image = features[i]
                 
                 if image.shape[0] == 3:
                     # For CIFAR (3, H, W) -> (H, W, 3)
@@ -658,45 +663,16 @@ def draw_split_statistic_dy(
                 else:
                     # For MNIST (1, H, W) -> (H, W)
                     image = image.squeeze().numpy()
-                
-                ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
-                ax.set_title(train_labels[i].item())
-                ax.axis('off')
-            
-            plt.tight_layout(rect=[0, 0, 1, 0.96])
-            plt.show()
-            if save:
-                save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_train_data_plot.png')
-                plt.savefig(save_path)
-                print(f"Saved images to {save_path}")
 
-            # testing data plot
-            test_features = data['test_features']
-            test_labels = data['test_labels']
-            
-            num_images = min(100, test_features.shape[0])
-            fig, axes = plt.subplots(10, 10, figsize=(15, 15))
-            fig.suptitle(f'Dictionary {idx} - First {num_images} Testing Images', fontsize=16)
-            
-            for i in range(num_images):
-                ax = axes[i // 10, i % 10]
-                image = test_features[i]
-                
-                if image.shape[0] == 3:
-                    # For CIFAR (3, H, W) -> (H, W, 3)
-                    image = image.permute(1, 2, 0).numpy()
-                else:
-                    # For MNIST (1, H, W) -> (H, W)
-                    image = image.squeeze().numpy()
-                
                 ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
-                ax.set_title(test_labels[i].item())
+                ax.set_title(labels[i].item())
                 ax.axis('off')
-            
+
             plt.tight_layout(rect=[0, 0, 1, 0.96])
             plt.show()
+            
             if save:
-                save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_test_data_plot.png')
+                save_path = os.path.join(save_dir, f'{file_name}_client_{data["client_number"]}_epoch_{data["epoch_locker_order"]}_{data_type}_data_plot.png')
                 plt.savefig(save_path)
                 print(f"Saved images to {save_path}")
             

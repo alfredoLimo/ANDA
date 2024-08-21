@@ -193,9 +193,6 @@ def split_trDA_teDR_Px(
                 'epoch_locker_order': i
             })
 
-            if client_Count == 0:
-                print(cumulative_features.shape, cumulative_labels.shape)
-
         # testing set
         angle, color = pattern_bank[test_dist]
         cur_test_feature = rotate_dataset(cur_test_feature, [float(angle)] * cur_test_feature.shape[0])
