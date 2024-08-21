@@ -205,7 +205,7 @@ def split_trND_teDR_Py(
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
     assert scaling_high >= scaling_low, "High scaling must be larger than low scaling."
-    assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault"
+    assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault."
     label_num = torch.unique(train_labels).size(0)
 
     print("Reverse mode, creating strong unseen level..") if verbose and reverse_test else None
@@ -513,7 +513,3 @@ def split_trND_teDR_Py_x(
         rearranged_data.append(client_data)
             
     return rearranged_data
-
-
-    
-
