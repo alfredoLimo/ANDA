@@ -32,8 +32,8 @@ def split_trND_teDR_Px(
     Split the dataset into distributions as:
         Training: A (large in size)
         Testing: B (unseen)
-    with distribution difference in P(x)
-    for A SINGLE CLIENT. (overall skew among clients exists)
+        with distribution difference in P(x)
+        for A SINGLE CLIENT. (overall skew among clients exists)
 
     Args:
         train_features (torch.Tensor): The training features.
@@ -172,8 +172,8 @@ def split_trND_teDR_Py(
     Split the dataset into distributions as:
         Training: A (large in size)
         Testing: B (unseen)
-    with distribution difference in P(y)
-    for A SINGLE CLIENT. (overall skew among clients exists)
+        with distribution difference in P(y)
+        for A SINGLE CLIENT. (overall skew among clients exists)
 
     Args:
         train_features (torch.Tensor): The training features.
@@ -313,8 +313,8 @@ def split_trND_teDR_Px_y(
     Split the dataset into distributions as:
         Training: A (large in size)
         Testing: B (unseen)
-    with distribution difference in P(x|y)
-    for A SINGLE CLIENT. (overall skew among clients exists)
+        with distribution difference in P(x|y)
+        for A SINGLE CLIENT. (overall skew among clients exists)
 
     Args:
         train_features (torch.Tensor): The training features.
@@ -419,8 +419,8 @@ def split_trND_teDR_Py_x(
     Split the dataset into distributions as:
         Training: A (large in size)
         Testing: B (unseen)
-    with distribution difference in P(y|x)
-    for A SINGLE CLIENT. (overall skew among clients exists)
+        with distribution difference in P(y|x)
+        for A SINGLE CLIENT. (overall skew among clients exists)
 
     Args:
         train_features (torch.Tensor): The training features.
