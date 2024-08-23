@@ -452,6 +452,8 @@ def split_trND_teDR_Py_x(
     assert rotation_bank > 0, "The number of rotation patterns must be greater than 0."
     assert color_bank > 0, "The number of color patterns must be greater than 0."
     max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
+    assert 0 <= rotated_label_number <= max_label, "Out of range."
+    assert 0 <= colored_label_number <= max_label, "Out of range."
     rotated_label_list = np.random.choice(range(0, max_label), rotated_label_number,replace=False).tolist()
     colored_label_list = np.random.choice(range(0, max_label), colored_label_number,replace=False).tolist()
     

@@ -144,10 +144,10 @@ def split_trDA_teND_Px(
 
         # generate drifting
         dist_bank = list(range(1, rotation_bank * color_bank + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -319,10 +319,10 @@ def split_trDA_teND_Py(
 
         # generate drifting
         dist_bank = list(range(1, py_bank + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -505,10 +505,10 @@ def split_trDA_teND_Px_y(
 
         # generate drifting
         dist_bank = list(range(1, math.factorial(mixing_num) + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -716,10 +716,10 @@ def split_trDA_teND_Py_x(
 
         # generate drifting
         dist_bank = list(range(1, pyx_pattern_bank_num + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
