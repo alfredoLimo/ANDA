@@ -18,7 +18,7 @@ def set_seed(
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
-def split_trDA_teDR_Px(
+def split_trDR_teND_Px(
     train_features: torch.Tensor,
     train_labels: torch.Tensor,
     test_features: torch.Tensor,
@@ -35,8 +35,8 @@ def split_trDA_teDR_Px(
 ) -> list:
     '''
     Split the dataset into distributions as:
-        Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC (accumulative)
-        Testing: D (unseen)
+        Training: A-A-B-B-B-C-C-C-A-A-D-D …
+        Testing: A/B/C/D (seen at least once)
         with distribution difference in P(x)
         for A SINGLE CLIENT. (overall skew among clients exists)
 
@@ -58,21 +58,21 @@ def split_trDA_teDR_Px(
         
         DA_dataset_scaling (float): The scaling factor for the training dataset.
             (size = original size * dataset_scaling)
-        DA_epoch_locker_num (int): The number of dataset growth stages during overall training.
-            E.g., 2 means the dataset grows once (two stages), and an indicator float=0.5 will be labeled
-            to the subdataset to let known when to grow.
+        DA_epoch_locker_num (int): The number of dataset changing stages during overall training.
+            E.g., 2 means the dataset changes once (two stages), and an indicator float=0.5 will be labeled
+            to the subdataset to let known when to change.
             Accordingly, 3 gives float=0.33,0.67.
         DA_random_locker (bool): Whether clients are randomly assigned to epoch lockers.
             When true, the locker float is randomly generated.
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -81,6 +81,9 @@ def split_trDA_teDR_Px(
 
         VERBOSE is always recommended for sanity check.
 
+        Set DA_dataset_scaling pairing your DA_epoch_locker_num
+            when DA_dataset_scaling==DA_epoch_locker_num, #datapoints same as original.
+
         #TODO to support manual distribution assignment.
 
     Returns:
@@ -88,7 +91,7 @@ def split_trDA_teDR_Px(
             train, (bool) whether it is training set
             dataset,
             client number,
-            epoch locker indicator, (float) to tell the growth time
+            epoch locker indicator, (float) to tell the changing time
             epoch locker order: (int) to tell the order of current subset
     '''
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
@@ -144,10 +147,10 @@ def split_trDA_teDR_Px(
 
         # generate drifting
         dist_bank = list(range(1, rotation_bank * color_bank + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -161,10 +164,6 @@ def split_trDA_teDR_Px(
         feature_chunks = torch.chunk(cur_train_feature, DA_epoch_locker_num, dim=0)
         label_chunks = torch.chunk(cur_train_label, DA_epoch_locker_num, dim=0)
 
-        # Initialize cumulative feature and label tensors
-        cumulative_features = None
-        cumulative_labels = None
-
         # Loop through feature chunks and label chunks
         for i, (feature_chunk, label_chunk) in enumerate(zip(feature_chunks, label_chunks)):
             # Get angle and color from the pattern bank based on the train_dist
@@ -174,23 +173,11 @@ def split_trDA_teDR_Px(
             feature_chunk = rotate_dataset(feature_chunk, [float(angle)] * feature_chunk.shape[0])
             feature_chunk = color_dataset(feature_chunk, [color] * feature_chunk.shape[0])
 
-            # Concatenate cumulatively with previous chunks
-            if cumulative_features is None:
-                cumulative_features = feature_chunk
-                cumulative_labels = label_chunk
-            else:
-                cumulative_features = torch.cat((cumulative_features, feature_chunk), dim=0)
-                cumulative_labels = torch.cat((cumulative_labels, label_chunk), dim=0)
-
-            permuted_indices = torch.randperm(cumulative_labels.shape[0])
-            cumulative_features = cumulative_features[permuted_indices]
-            cumulative_labels = cumulative_labels[permuted_indices]
-
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
                 'train': True,
-                'features': cumulative_features,
-                'labels': cumulative_labels,
+                'features': feature_chunk,
+                'labels': label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
                 'epoch_locker_order': i
@@ -214,7 +201,7 @@ def split_trDA_teDR_Px(
 
     return rearranged_data
 
-def split_trDA_teDR_Py(
+def split_trDR_teND_Py(
     train_features: torch.Tensor,
     train_labels: torch.Tensor,
     test_features: torch.Tensor,
@@ -231,8 +218,8 @@ def split_trDA_teDR_Py(
 ) -> list:
     '''
     Split the dataset into distributions as:
-        Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC (accumulative)
-        Testing: D (unseen)
+        Training: A-A-B-B-B-C-C-C-A-A-D-D …
+        Testing: A/B/C/D (seen at least once)
         with distribution difference in P(y)
         for A SINGLE CLIENT. (overall skew among clients exists)
 
@@ -252,21 +239,21 @@ def split_trDA_teDR_Py(
         
         DA_dataset_scaling (float): The scaling factor for the training dataset.
             (size = original size * dataset_scaling)
-        DA_epoch_locker_num (int): The number of dataset growth stages during overall training.
-            E.g., 2 means the dataset grows once (two stages), and an indicator float=0.5 will be labeled
-            to the subdataset to let known when to grow.
+        DA_epoch_locker_num (int): The number of dataset changing stages during overall training.
+            E.g., 2 means the dataset changes once (two stages), and an indicator float=0.5 will be labeled
+            to the subdataset to let known when to change.
             Accordingly, 3 gives float=0.33,0.67.
         DA_random_locker (bool): Whether clients are randomly assigned to epoch lockers.
             When true, the locker float is randomly generated.
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -319,10 +306,10 @@ def split_trDA_teDR_Py(
 
         # generate drifting
         dist_bank = list(range(1, py_bank + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -331,10 +318,6 @@ def split_trDA_teDR_Py(
               "\nTest distribution: ", test_dist,
               "\nEpoch lockers: ", lockers,
               "\n") if verbose else None
-
-        # Initialize cumulative feature and label tensors
-        cumulative_features = None
-        cumulative_labels = None
 
         # training subsets
         for i, dist in enumerate(train_dist):
@@ -345,23 +328,11 @@ def split_trDA_teDR_Py(
             filtered_train_feature = cur_train_feature[mask]
             filtered_train_label = cur_train_label[mask]
 
-            # Concatenate cumulatively with previous chunks
-            if cumulative_features is None:
-                cumulative_features = filtered_train_feature
-                cumulative_labels = filtered_train_label
-            else:
-                cumulative_features = torch.cat((cumulative_features, filtered_train_feature), dim=0)
-                cumulative_labels = torch.cat((cumulative_labels, filtered_train_label), dim=0)
-
-            permuted_indices = torch.randperm(cumulative_labels.shape[0])
-            cumulative_features = cumulative_features[permuted_indices]
-            cumulative_labels = cumulative_labels[permuted_indices]
-
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
                 'train': True,
-                'features': cumulative_features,
-                'labels': cumulative_labels,
+                'features': filtered_train_feature,
+                'labels': filtered_train_label,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
                 'epoch_locker_order': i
@@ -387,7 +358,7 @@ def split_trDA_teDR_Py(
 
     return rearranged_data
 
-def split_trDA_teDR_Px_y(
+def split_trDR_teND_Px_y(
     train_features: torch.Tensor,
     train_labels: torch.Tensor,
     test_features: torch.Tensor,
@@ -403,8 +374,8 @@ def split_trDA_teDR_Px_y(
 ) -> list:
     """
     Split the dataset into distributions as:
-        Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC (accumulative)
-        Testing: D (unseen)
+        Training: A-A-B-B-B-C-C-C-A-A-D-D …
+        Testing: A/B/C/D (seen at least once)
         with distribution difference in P(x|y)
         for A SINGLE CLIENT. (overall skew among clients exists)
 
@@ -435,12 +406,12 @@ def split_trDA_teDR_Px_y(
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -448,6 +419,9 @@ def split_trDA_teDR_Px_y(
         CHOICES: NO. (contrast to SAMPLE)
 
         VERBOSE is always recommended for sanity check.
+
+        Set DA_dataset_scaling pairing your DA_epoch_locker_num
+            when DA_dataset_scaling==DA_epoch_locker_num, #datapoints same as original.
 
         #TODO to support manual classes assignment.
 
@@ -505,10 +479,10 @@ def split_trDA_teDR_Px_y(
 
         # generate drifting
         dist_bank = list(range(1, math.factorial(mixing_num) + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -522,10 +496,6 @@ def split_trDA_teDR_Px_y(
         feature_chunks = torch.chunk(cur_train_feature, DA_epoch_locker_num, dim=0)
         label_chunks = torch.chunk(cur_train_label, DA_epoch_locker_num, dim=0)
 
-        # Initialize cumulative feature and label tensors
-        cumulative_features = None
-        cumulative_labels = None
-
         # Loop through feature chunks and label chunks
         for i, (feature_chunk, label_chunk) in enumerate(zip(feature_chunks, label_chunks)):
             # Get remapping
@@ -536,23 +506,11 @@ def split_trDA_teDR_Px_y(
             for original_label, new_label in label_remapping.items():
                 remapped_label_chunk[label_chunk == original_label] = new_label
 
-            # Concatenate cumulatively with previous chunks
-            if cumulative_features is None:
-                cumulative_features = feature_chunk
-                cumulative_labels = remapped_label_chunk
-            else:
-                cumulative_features = torch.cat((cumulative_features, feature_chunk), dim=0)
-                cumulative_labels = torch.cat((cumulative_labels, remapped_label_chunk), dim=0)
-
-            permuted_indices = torch.randperm(cumulative_labels.shape[0])
-            cumulative_features = cumulative_features[permuted_indices]
-            cumulative_labels = cumulative_labels[permuted_indices]
-
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
                 'train': True,
-                'features': cumulative_features,
-                'labels': cumulative_labels,
+                'features': feature_chunk,
+                'labels': remapped_label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
                 'epoch_locker_order': i
@@ -577,7 +535,7 @@ def split_trDA_teDR_Px_y(
 
     return rearranged_data
 
-def split_trDA_teDR_Py_x(
+def split_trDR_teND_Py_x(
     train_features: torch.Tensor,
     train_labels: torch.Tensor,
     test_features: torch.Tensor,
@@ -596,8 +554,8 @@ def split_trDA_teDR_Py_x(
 ) -> list:
     """
     Split the dataset into distributions as:
-        Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC (accumulative)
-        Testing: D (unseen)
+        Training: A-A-B-B-B-C-C-C-A-A-D-D …
+        Testing: A/B/C/D (seen at least once)
         with distribution difference in P(y|x)
         for A SINGLE CLIENT. (overall skew among clients exists)
 
@@ -630,12 +588,12 @@ def split_trDA_teDR_Py_x(
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -644,7 +602,10 @@ def split_trDA_teDR_Py_x(
 
         VERBOSE is always recommended for sanity check.
 
-        #TODO to support manual classes assignment.
+        Set DA_dataset_scaling pairing your DA_epoch_locker_num
+            when DA_dataset_scaling==DA_epoch_locker_num, #datapoints same as original.
+
+        #TODO to support manual distribution assignment.
 
     Returns:
         A list of dictionaries contains:
@@ -665,7 +626,6 @@ def split_trDA_teDR_Py_x(
     assert 1 <= DA_max_dist <= pyx_pattern_bank_num, "Distribution assignment out of range."
     assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault."
     assert pyx_pattern_bank_num <= math.comb(max_label, targeted_class_number), "pyx_pattern_bank_num out of range."
-
 
     # generate pyx bank
     angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
@@ -722,10 +682,10 @@ def split_trDA_teDR_Py_x(
 
         # generate drifting
         dist_bank = list(range(1, pyx_pattern_bank_num + 1))
-        test_dist = np.random.choice(dist_bank)
-        dist_bank.remove(test_dist)
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
+        test_dist = np.random.choice(list(set(train_dist))) # random pick
+        # test_dist = max(set(train_dist), key=train_dist.count) # most common element
         
         lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
                 else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
@@ -738,10 +698,6 @@ def split_trDA_teDR_Py_x(
         # training subsets
         feature_chunks = torch.chunk(cur_train_feature, DA_epoch_locker_num, dim=0)
         label_chunks = torch.chunk(cur_train_label, DA_epoch_locker_num, dim=0)
-
-        # Initialize cumulative feature and label tensors
-        cumulative_features = None
-        cumulative_labels = None
 
         # Loop through feature chunks and label chunks
         for i, (feature_chunk, label_chunk) in enumerate(zip(feature_chunks, label_chunks)):
@@ -756,23 +712,11 @@ def split_trDA_teDR_Py_x(
             feature_chunk = rotate_dataset(feature_chunk, cur_angle)
             feature_chunk = color_dataset(feature_chunk, cur_color)
 
-            # Concatenate cumulatively with previous chunks
-            if cumulative_features is None:
-                cumulative_features = feature_chunk
-                cumulative_labels = label_chunk
-            else:
-                cumulative_features = torch.cat((cumulative_features, feature_chunk), dim=0)
-                cumulative_labels = torch.cat((cumulative_labels, label_chunk), dim=0)
-
-            permuted_indices = torch.randperm(cumulative_labels.shape[0])
-            cumulative_features = cumulative_features[permuted_indices]
-            cumulative_labels = cumulative_labels[permuted_indices]
-
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
                 'train': True,
-                'features': cumulative_features,
-                'labels': cumulative_labels,
+                'features': feature_chunk,
+                'labels': label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
                 'epoch_locker_order': i

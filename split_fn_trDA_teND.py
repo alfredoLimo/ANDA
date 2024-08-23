@@ -664,6 +664,7 @@ def split_trDA_teND_Py_x(
     assert DA_epoch_locker_num > 0, "The number of epoch lockers must be greater than 0."
     assert 1 <= DA_max_dist <= pyx_pattern_bank_num, "Distribution assignment out of range."
     assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault."
+    assert pyx_pattern_bank_num <= math.comb(max_label, targeted_class_number), "pyx_pattern_bank_num out of range."
 
 
     # generate pyx bank
@@ -680,8 +681,13 @@ def split_trDA_teND_Py_x(
 
     px_pattern_bank = [[angle, color] for angle in angles for color in colors]
 
+    pyx_stack = set()
+    while len(pyx_stack) < pyx_pattern_bank_num:
+        pyx_stack.add(tuple(sorted(np.random.choice(max_label, targeted_class_number, replace=False))))
+    pyx_stack = list(pyx_stack)
+    random.shuffle(pyx_stack)
 
-    pyx_bank = {i: {'classes': sorted(np.random.choice(max_label, targeted_class_number, replace=False).tolist()),
+    pyx_bank = {i: {'classes': list(pyx_stack.pop()), 
                     'px_pattern': random.choice(px_pattern_bank)}
                 for i in range(1, pyx_pattern_bank_num + 1)}
 

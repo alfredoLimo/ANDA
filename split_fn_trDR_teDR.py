@@ -406,12 +406,12 @@ def split_trDR_teDR_Px_y(
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -588,12 +588,12 @@ def split_trDR_teDR_Py_x(
             E.g., when DA_epoch_locker_num=3 with DA_random_locker=True, the locker floats could be 0.20,0.80.
         DA_max_dist (int): The maximum dist types during overall training.
             E.g., when DA_epoch_locker_num=5 with DA_max_dist=3,
-            drifting as [A]-[AB]-[ABB]-[ABBB]-[ABBBC] is VALID. 3=(A,B,C)
-            drifting as [A]-[AB]-[ABC]-[ABCC]-[ABCCD] is INVALID. 4=(A,B,C,D)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. 3=(A,B,C)
+            drifting as [A]-[B]-[C]-[C]-[D] is INVALID. 4=(A,B,C,D)
         DA_continual_divergence (bool): Whether the distribution drifts continually.
             E.g. when True,
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
-            drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
+            drifting as [A]-[B]-[B]-[C]-[C] is VALID. (continual)
+            drifting as [A]-[B]-[B]-[C]-[A] is INVALID. (back to dist A)
         
     Warning:
         EXTENSION: YES. Datapoints replicated overall. (by dataset_scaling)
@@ -625,6 +625,7 @@ def split_trDR_teDR_Py_x(
     assert DA_epoch_locker_num > 0, "The number of epoch lockers must be greater than 0."
     assert 1 <= DA_max_dist <= pyx_pattern_bank_num, "Distribution assignment out of range."
     assert torch.unique(train_labels).size(0) == torch.unique(test_labels).size(0), "Original Dataset Fault."
+    assert pyx_pattern_bank_num <= math.comb(max_label, targeted_class_number), "pyx_pattern_bank_num out of range."
 
 
     # generate pyx bank
@@ -641,8 +642,13 @@ def split_trDR_teDR_Py_x(
 
     px_pattern_bank = [[angle, color] for angle in angles for color in colors]
 
+    pyx_stack = set()
+    while len(pyx_stack) < pyx_pattern_bank_num:
+        pyx_stack.add(tuple(sorted(np.random.choice(max_label, targeted_class_number, replace=False))))
+    pyx_stack = list(pyx_stack)
+    random.shuffle(pyx_stack)
 
-    pyx_bank = {i: {'classes': sorted(np.random.choice(max_label, targeted_class_number, replace=False).tolist()),
+    pyx_bank = {i: {'classes': list(pyx_stack.pop()), 
                     'px_pattern': random.choice(px_pattern_bank)}
                 for i in range(1, pyx_pattern_bank_num + 1)}
 

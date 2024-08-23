@@ -457,6 +457,7 @@ def split_trND_teDR_Py_x(
     rotated_label_list = np.random.choice(range(0, max_label), rotated_label_number,replace=False).tolist()
     colored_label_list = np.random.choice(range(0, max_label), colored_label_number,replace=False).tolist()
     
+
     # generate basic split
     basic_split_data_train = split_basic(train_features, train_labels, client_number)
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
