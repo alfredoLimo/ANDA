@@ -1,6 +1,16 @@
 from . import split_fn
+from . import split_fn_trDA_teDR
+from . import split_fn_trND_teDR
+from . import split_fn_trDA_teND
+from . import split_fn_trDR_teDR
+from . import split_fn_trDR_teND
 from . import utils
 from .split_fn import *
+from .split_fn_trDA_teDR import *
+from .split_fn_trND_teDR import *
+from .split_fn_trDA_teND import *
+from .split_fn_trDR_teDR import *
+from .split_fn_trDR_teND import *
 from .utils import *
 
 def set_seed(
@@ -15,6 +25,11 @@ def set_seed(
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     split_fn.set_seed(RANDOM_SEED)
+    split_fn_trDA_teDR.set_seed(RANDOM_SEED)
+    split_fn_trND_teDR.set_seed(RANDOM_SEED)
+    split_fn_trDA_teND.set_seed(RANDOM_SEED)
+    split_fn_trDR_teDR.set_seed(RANDOM_SEED)
+    split_fn_trDR_teND.set_seed(RANDOM_SEED)
     utils.set_seed(RANDOM_SEED)
 
 def load_split_datasets(
@@ -315,3 +330,65 @@ def load_split_datasets(
                              file_name=f"{dataset_name}_{client_number}_{non_iid_type}")
 
     return rearranged_data
+
+def load_split_datasets_dynamic(
+    dataset_name: str = "MNIST",
+    client_number: int = 10,
+    non_iid_type: str = "Px",
+    drfting_type: str = "trND_teDR",
+    show_features: bool = False,
+    show_labels: bool = False,
+    random_seed: int = 42,
+    **kwargs: dict
+) -> list:
+    """
+    Load the dynamic split datasets for the federated learning.
+
+    Refer to
+    https://github.com/alfredoLimo/ANDA 
+    for a quick start.
+
+    Args:
+        dataset_name (str): The name of the dataset to load.
+        client_number (int): The number of clients to split the dataset.
+        non_iid_type (str): The type of non-iid data distribution.
+        drfting_type (str): The type of drifting data distribution.
+        show_features (bool): Whether to show the feature distribution.
+        show_labels (bool): Whether to show the label distribution.
+        random_seed (int): The random seed for reproducibility.
+        **kwargs (dict): The additional arguments for manual mode.
+    
+    Returns:
+        list: The list of length client_number, each element is a dictionary containing the split dataset.
+    """
+    assert drfting_type in ["trDA_teDR", "trND_teDR", "trDA_teND", "trDR_teDR", "trDR_teND"], "drfting type not supported"
+    assert non_iid_type in ["Px","Py","Px_y","Py_x"], "non_iid type not supported"
+    
+    set_seed(random_seed)
+    train_features, train_labels, test_features, test_labels = load_full_datasets(dataset_name)
+
+    fn = f"split_{drfting_type}_{non_iid_type}"
+    if fn in globals():
+        rearranged_data = globals()[fn](
+            train_features, train_labels, test_features, test_labels,
+            client_number, verbose = show_features,
+            **kwargs,
+        )
+    else:
+        print(f"Function {fn} does not exist")
+
+    if show_labels:
+        if drfting_type == "trND_teDR":
+            print("Count labels and plot...")   
+            print("Plotting and saving first 100 images each for datasets of first four clients...")
+            print("This is hardcoded, please refer to the last part of load_split_datasets if any error/ modification is needed...")
+            draw_split_statistic(rearranged_data, plot_indices=[0,1,2,3],save=True,
+                                file_name=f"{dataset_name}_{client_number}_{non_iid_type}")
+
+        else:
+            print("Count labels and plot...")
+            print("This is hardcoded, please refer to the last part of load_split_datasets if any error/ modification is needed...")
+            draw_split_statistic_dy(rearranged_data,count=True,save=True,
+                                    file_name=f"{dataset_name}_{client_number}_{drfting_type}_{non_iid_type}",
+                                    locker_indices=[0,1,2,3,-1])
+

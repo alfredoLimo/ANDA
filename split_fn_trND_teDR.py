@@ -21,11 +21,11 @@ def split_trND_teDR_Px(
     test_features: torch.Tensor,
     test_labels: torch.Tensor,
     client_number: int = 10,
-    rotation_bank: int = 1,
-    color_bank: int = 1,
+    rotation_bank: int = 2,
+    color_bank: int = 3,
     scaling_low: float = 0.5,
     scaling_high: float = 0.5,
-    reverse_test: bool = False,
+    reverse_test: bool = True,
     verbose: bool = True
 ) -> list:
     '''
