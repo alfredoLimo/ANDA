@@ -96,7 +96,7 @@ The distribution of training is not drifting along epochs, and the dataset is un
 | **Quantity**     | /            | /                  | /                                      | /                                    | `split_unbalanced`                  |
   
 
-#### QUICK START WITH 'AUTO'
+### :small_blue_diamond: QUICK START WITH 'AUTO'
 
 `load_split_datasets` **parameters**
 
@@ -127,7 +127,7 @@ Results: (showing data from first four clients, try to repeat it with the same s
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/42edd1ad-4838-4f53-873c-4bb6f5a54b87" alt="Client 2" width="400"/>
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/1ae8f2e5-82c9-4868-8493-3fc817b08192" alt="Client 3" width="400"/>
 
-#### CUSTOMIZE WITH 'MANUAL'
+### :small_blue_diamond: CUSTOMIZE WITH 'MANUAL'
 
 `load_split_datasets` **parameters**
 
