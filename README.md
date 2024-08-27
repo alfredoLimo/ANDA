@@ -234,6 +234,11 @@ new_dataset = anda.load_split_datasets_dynamic(
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
+<img src="https://github.com/user-attachments/assets/b3c4a02a-ea6d-45c1-9477-66704f6252aa" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/fdba99de-83cf-4cd6-8e84-a018e0c2d71f" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/831601e8-d86f-41cd-9582-63f630612387" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/52c5ca84-3b0e-4b29-9c32-52b1e9df5ee3" alt="Client 0" width="400"/>
+
 ---
 
 ## :large_blue_diamond: MODE trDA_teND
