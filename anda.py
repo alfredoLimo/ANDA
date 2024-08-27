@@ -390,5 +390,5 @@ def load_split_datasets_dynamic(
             print("This is hardcoded, please refer to the last part of load_split_datasets if any error/ modification is needed...")
             draw_split_statistic_dy(rearranged_data,count=True,save=True,
                                     file_name=f"{dataset_name}_{client_number}_{drfting_type}_{non_iid_type}",
-                                    locker_indices=[0,1,2,3,-1])
+                                    locker_indices=[0,1,2,-1])
 
