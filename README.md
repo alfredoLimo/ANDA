@@ -2,10 +2,10 @@
   <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/593c8ca0-fce0-4fa7-ba73-9d900ce95559" alt="Picture1" width="700"/>
 </p>
 
-# ABOUT ANDA
+# :large_blue_circle: ABOUT ANDA
 **A** **N**on-IID **D**ata generator supporting **A**ny kind. Generate your non-IID datasets with one line.
 
-# FEATURES
+# :large_blue_circle: FEATURES
 - Repeat your Federated Learning (FL) experiments with non-IID datasets and without saving it!
 - Supporting six data drifting modes based one three basic types: **static**, **drifting**, **drifting with accumulation**. (details below)
 - Supporting five public datasets: **MNIST**, **EMNIST**, **FMNIST**, **CIFAR10**, and **CIFAR100**
@@ -16,7 +16,7 @@
   - **concept drift: label condition skew:** P(y|x)
   - **quantity skew**
  
-# USAGE WITH ONE LINE
+# :large_blue_circle: USAGE WITH ONE LINE
 - Clone ANDA repo to your working repo.
 - Create the default static/dynamic non-IID dataset with one line using `load_split_datasets` or `load_split_datasets_dynamic` as following:
 ```python
@@ -28,7 +28,7 @@ new_dataset_static = anda.load_split_datasets()
 new_dataset_dynamic = anda.load_split_datasets_dynamic()
 ```
 
-# STATIC VS DYNAMIC NON-IID
+# :large_blue_circle: STATIC VS DYNAMIC NON-IID
 In **static non-IID datasets**, clients may have different data distributions, but the training and testing sets of each are from the same distribution. In **dynamic/drifting non-IID datasets**, the training and testing sets are furthermore from different distributions.
 
 <table>
@@ -79,7 +79,7 @@ In **static non-IID datasets**, clients may have different data distributions, b
  
 ---
 
-## MODE static(\\)
+## :large_blue_diamond: MODE static(\\)
 > The training set is not drifting (unchanged), as well the testing set.   
 The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
 **Training: A (large in size)**   
@@ -164,7 +164,7 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 ---
 
-## MODE trND_teDR
+## :large_blue_diamond: MODE trND_teDR
 > The training set is not drifting (unchanged), but the testing set drifted.   
 The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
 The distribution of testing is drifting.   
@@ -173,7 +173,7 @@ The distribution of testing is drifting.
 
 ---
 
-## MODE trDA_teDR
+## :large_blue_diamond: MODE trDA_teDR
 > The training set is drifting with accumulation, and the testing set drifted.   
 The distribution of training is drifting along epochs and accumulating.   
 The distribution of testing drifted (unseen to the client).   
@@ -182,7 +182,7 @@ The distribution of testing drifted (unseen to the client).
 
 ---
 
-## MODE trDA_teND
+## :large_blue_diamond: MODE trDA_teND
 > The training set is drifting with accumulation, and the testing set is not drifting.   
 The distribution of training is drifting along epochs and accumulating.   
 The distribution of testing is not drifting (seen at least once).   
@@ -191,7 +191,7 @@ The distribution of testing is not drifting (seen at least once).
 
 ---
 
-## MODE trDR_teDR
+## :large_blue_diamond: MODE trDR_teDR
 > The training set is drifting without accumulation, and the testing set drifted.   
 The distribution of training is drifting along epochs.
 The distribution of testing drifted (unseen to the client).   
@@ -200,14 +200,14 @@ The distribution of testing drifted (unseen to the client).
 
 ---
 
-## MODE trDR_teND
+## :large_blue_diamond: MODE trDR_teND
 > The training set is drifting without accumulation, and the testing set is not drifting.   
 The distribution of training is drifting along epochs.   
 The distribution of testing is not drifting (seen at least once).   
 **Training: A-A-B-B-B-C-C-C-A-A-D-D …**   
 **Testing: A/B/C/D (seen at least once)**  
 
-## MORE ON NON-IID
+# :large_blue_circle: MORE ON NON-IID
 [Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
 
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
