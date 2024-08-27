@@ -7,6 +7,7 @@
 
 # FEATURES
 - Repeat your Federated Learning (FL) experiments with non-IID datasets and without saving it!
+- Supporting six data drifting modes based one three basic types: **static**, **drifting**, **drifting with accumulation**. (details below)
 - Supporting five public datasets: **MNIST**, **EMNIST**, **FMNIST**, **CIFAR10**, and **CIFAR100**
 - Supporting five types of non-IID-ness and their mixtures:
   - **feature distribution skew**: P(x)
@@ -15,6 +16,77 @@
   - **concept drift: label condition skew:** P(y|x)
   - **quantity skew**
  
+# USAGE WITH ONE LINE
+- Clone ANDA repo to your working repo.
+- Create the default static/dynamic non-IID dataset with one line using `load_split_datasets` or `load_split_datasets_dynamic` as following:
+```python
+from ANDA import anda
+
+# static
+new_dataset_static = anda.load_split_datasets()
+# dynamic
+new_dataset_dynamic = anda.load_split_datasets_dynamic()
+```
+
+# STATIC VS DYNAMIC NON-IID
+In **static non-IID datasets**, clients may have different data distributions, but the training and testing sets of each are from the same distribution. In **dynamic/drifting non-IID datasets**, the training and testing sets are furthermore from different distributions.
+
+<table>
+  <tr>
+    <th>Training</th>
+    <th>Testing</th>
+    <th>Module Name</th>
+  </tr>
+  <tr>
+    <td rowspan="2">No drifting (with a relatively large in size dataset)</td>
+    <td>Drifting</td>
+    <th>trND_teDR</th>
+    
+  </tr>
+  <tr>
+    <td>No drifting</td>
+    <th>\</th>
+    
+  </tr>
+
+  
+  <tr>
+    <td rowspan="2">Drifting with accumulation</td>
+    <td>Drifting</td>
+    <th>trDA_teDR</th>
+    
+  </tr>
+  <tr>
+    <td>No drifting</td>
+    <th>trDA_teND</th>
+    
+  </tr>
+
+  <tr>
+    <td rowspan="2">Drifting without accumulation</td>
+    <td>Drifting</td>
+    <th>trDR_teDR</th>
+    
+    
+  </tr>
+  <tr>
+    <td>No drifting</td>
+    <th>trDR_teND</th>
+    
+  </tr>
+*accumulation: drifting data are <b>appended to</b>, not replacing old datasets.
+</table>
+ 
+---
+
+## MODE static(\\)
+> The training set is not drifting (unchanged), as well the testing set.   
+The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
+**Training: A (large in size)**   
+**Testing: A (same)**   
+
+
+
 | **Non-IID type** | **P(x)**     | **P(y)**           | **P(x\|y)**                            | **P(y\|x)**                          | **Quantity**                      |
 |------------------|--------------|--------------------|----------------------------------------|--------------------------------------|-----------------------------------|
 | **P(x)**         | `feature_skew` | `feature_label_skew` | /                        | /                        | `feature_skew_unbalanced`           |
@@ -22,18 +94,9 @@
 | **P(x\|y)**      | /            | /                  | `feature_condition_skew`                 | /                      | `feature_condition_skew_unbalanced` |
 | **P(y\|x)**      | /            | /                  | /                                      | `label_condition_skew`                 | `label_condition_skew_unbalanced`   |
 | **Quantity**     | /            | /                  | /                                      | /                                    | `split_unbalanced`                  |
-- Supporting two modes: **AUTO** and **MANUAL**.
----
-## USAGE WITH ONE LINE
-- Clone ANDA repo to your working repo
-- Create the default non-IID dataset with one line using `load_split_datasets` as follows:
-```python
-from ANDA import anda
+  
 
-new_dataset = anda.load_split_datasets()
-```
-
-## QUICK START WITH AUTO MODE
+#### QUICK START WITH 'AUTO'
 
 `load_split_datasets` **parameters**
 
@@ -64,7 +127,7 @@ Results: (showing data from first four clients, try to repeat it with the same s
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/42edd1ad-4838-4f53-873c-4bb6f5a54b87" alt="Client 2" width="400"/>
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/1ae8f2e5-82c9-4868-8493-3fc817b08192" alt="Client 3" width="400"/>
 
-## CUSTOMIZE WITH MANUAL MODE
+#### CUSTOMIZE WITH 'MANUAL'
 
 `load_split_datasets` **parameters**
 
@@ -99,100 +162,52 @@ Results: (showing data from first four clients, try to repeat it with the same s
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/a9b75621-5ad5-4d09-be36-b96e38e7def2" alt="Client 3" width="400"/>
 
 
+---
 
-## MORE ON NON-IID
-[Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
-
-[Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
-
-## UNDER CONSTRUCTION
-**Dynamic/drifting non-IID datasets**: The training set and testing set are from different distributions.
-
-### trND_teDR
+## MODE trND_teDR
 > The training set is not drifting (unchanged), but the testing set drifted.   
 The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
 The distribution of testing is drifting.   
 **Training: A (large in size)**   
-**Testing: B (unseen)**   
+**Testing: B (unseen)**  
 
-### trDA_teDR
+---
+
+## MODE trDA_teDR
 > The training set is drifting with accumulation, and the testing set drifted.   
 The distribution of training is drifting along epochs and accumulating.   
 The distribution of testing drifted (unseen to the client).   
 **Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC**   
-**Testing: D (unseen)**   
+**Testing: D (unseen)**
 
-### trDA_teND
+---
+
+## MODE trDA_teND
 > The training set is drifting with accumulation, and the testing set is not drifting.   
 The distribution of training is drifting along epochs and accumulating.   
 The distribution of testing is not drifting (seen at least once).   
 **Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC …**   
 **Testing: A/B/C (seen at least once)**   
 
-### trDR_teDR
+---
+
+## MODE trDR_teDR
 > The training set is drifting without accumulation, and the testing set drifted.   
 The distribution of training is drifting along epochs.
 The distribution of testing drifted (unseen to the client).   
 **Training: A-A-B-B-B-C-C-C-A-A-D-D**   
 **Testing: E (unseen)**   
 
-### trDR_teND
+---
+
+## MODE trDR_teND
 > The training set is drifting without accumulation, and the testing set is not drifting.   
 The distribution of training is drifting along epochs.   
 The distribution of testing is not drifting (seen at least once).   
 **Training: A-A-B-B-B-C-C-C-A-A-D-D …**   
-**Testing: A/B/C/D (seen at least once)**   
+**Testing: A/B/C/D (seen at least once)**  
 
-<table>
-  <tr>
-    <th>Training</th>
-    <th>Testing</th>
-    <th>Supporting</th>
-    <th>Module Name</th>
-  </tr>
-  <tr>
-    <td rowspan="2">No drifting (with a relatively large in size dataset)</td>
-    <td>Drifting</td>
-    <th>Yes</th>
-    <th>trND_teDR</th>
-    
-  </tr>
-  <tr>
-    <td>N/A (No drifting for both is static dataset)</td>
-    <th>No</th>
-    <th>\</th>
-    
-  </tr>
+## MORE ON NON-IID
+[Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
 
-  
-  <tr>
-    <td rowspan="2">Drifting with accumulation</td>
-    <td>Drifting</td>
-    <th>Yes</th>
-    <th>trDA_teDR</th>
-    
-  </tr>
-  <tr>
-    <td>No drifting</td>
-    <th>Yes</th>
-    <th>trDA_teND</th>
-    
-  </tr>
-
-  <tr>
-    <td rowspan="2">Drifting without accumulation</td>
-    <td>Drifting</td>
-    <th>Yes</th>
-    <th>trDR_teDR</th>
-    
-    
-  </tr>
-  <tr>
-    <td>No drifting</td>
-    <th>Yes</th>
-    <th>trDR_teND</th>
-    
-  </tr>
-*accumulation: drifting data are <b>appended to</b>, not replacing old datasets.
-</table>
-
+[Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
