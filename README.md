@@ -195,7 +195,10 @@ new_dataset = anda.load_split_datasets_dynamic(
     random_seed = 42
 )
 ```
-Results: (showing data from first client, both training and testing sets)
+Results: (showing data from the first client, both training and testing sets)
+
+<img src="https://github.com/user-attachments/assets/40155e5d-d05a-4243-8cb5-d01c642bf0fa" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/00f66663-757e-4ab5-acd9-c0a462f9e1b2" alt="Client 0" width="400"/>
 
 
 ---
