@@ -83,7 +83,8 @@ In **static non-IID datasets**, clients may have different data distributions, b
 > The training set is not drifting (unchanged), as well the testing set.   
 The distribution of training is not drifting along epochs, and the dataset is unchanged (and large in size).   
 **Training: A (large in size)**   
-**Testing: A (same)**   
+**Testing: A (same)**
+![Picture1](https://github.com/user-attachments/assets/78e40ee6-f16e-4b4b-923e-2b3cf596431c)
 
 
 
@@ -170,6 +171,7 @@ The distribution of training is not drifting along epochs, and the dataset is un
 The distribution of testing is drifting.   
 **Training: A (large in size)**   
 **Testing: B (unseen)**  
+![Picture2](https://github.com/user-attachments/assets/0c866768-e135-4d40-bd79-4ba29d079166)
 
 ---
 
@@ -179,6 +181,8 @@ The distribution of training is drifting along epochs and accumulating.
 The distribution of testing drifted (unseen to the client).   
 **Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC**   
 **Testing: D (unseen)**
+![Picture3](https://github.com/user-attachments/assets/87feddd7-5164-4e0d-bd8f-7b4b72b4302a)
+
 
 ---
 
@@ -188,6 +192,7 @@ The distribution of training is drifting along epochs and accumulating.
 The distribution of testing is not drifting (seen at least once).   
 **Training: A-A-AB-ABB-ABB-ABBB-ABBBC-ABBBC …**   
 **Testing: A/B/C (seen at least once)**   
+![Picture4](https://github.com/user-attachments/assets/d2faef95-0c55-44e9-b508-a386d2ca1b6e)
 
 ---
 
@@ -197,6 +202,7 @@ The distribution of training is drifting along epochs.
 The distribution of testing drifted (unseen to the client).   
 **Training: A-A-B-B-B-C-C-C-A-A-D-D**   
 **Testing: E (unseen)**   
+![Picture5](https://github.com/user-attachments/assets/65438c66-6cfc-46a1-95a8-9ad24f102a6f)
 
 ---
 
@@ -206,6 +212,7 @@ The distribution of training is drifting along epochs.
 The distribution of testing is not drifting (seen at least once).   
 **Training: A-A-B-B-B-C-C-C-A-A-D-D …**   
 **Testing: A/B/C/D (seen at least once)**  
+![Picture6](https://github.com/user-attachments/assets/d11f2f12-9ab2-405e-af88-14a0d34cdc3a)
 
 # :large_blue_circle: MORE ON NON-IID
 [Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
