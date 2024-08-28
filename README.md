@@ -7,8 +7,8 @@
 
 # :large_blue_circle: FEATURES
 - Repeat your Federated Learning (FL) experiments with non-IID datasets and without saving it!
-- Supporting six data drifting modes based one three basic types: **static**, **drifting**, **drifting with accumulation**. (details below)
 - Supporting five public datasets: **MNIST**, **EMNIST**, **FMNIST**, **CIFAR10**, and **CIFAR100**
+- Supporting six data drifting modes based on three basic types: **static**, **drifting**, **drifting with accumulation**. (details below)
 - Supporting five types of non-IID-ness and their mixtures:
   - **feature distribution skew**: P(x)
   - **label distribution skew:** P(y)
