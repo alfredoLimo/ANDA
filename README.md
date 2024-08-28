@@ -103,7 +103,7 @@ The distribution of training is not drifting along epochs, and the dataset is un
 
 - **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
 - **client_number**: int = 10, number of clients/sub-datasets
-- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md)
+- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md)
 - **mode**: str = "auto", using AUTO mode
 - **non_iid_level**: str = "medium", auto setting a level for non-IID, "low","medium", or "high"
 - **show_features**: bool = False, show generated feature details if any
@@ -134,12 +134,12 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 - **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
 - **client_number**: int = 10, number of clients/sub-datasets
-- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](appendix.md).
+- **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md).
 - **mode**: str = "manual", using MANUAL mode.
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](appendix.md).
+- **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](static_mode_guide.md).
 
 ```python
 new_dataset = anda.load_split_datasets(
@@ -183,7 +183,7 @@ The distribution of testing is drifting.
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for trND_teDR. [More details]().
+- **\*\*kwargs**: customized parameters for trND_teDR. [More details](dynamic_mode_guide.md).
 ```python
 new_dataset = anda.load_split_datasets_dynamic(
     dataset_name = "MNIST",
@@ -220,7 +220,7 @@ The distribution of testing drifted (unseen to the client).
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for trDA_teDR. [More details]().
+- **\*\*kwargs**: customized parameters for trDA_teDR. [More details](dynamic_mode_guide.md).
 ```python
 new_dataset = anda.load_split_datasets_dynamic(
     dataset_name = "MNIST",
@@ -258,7 +258,7 @@ The distribution of testing is not drifting (seen at least once).
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for trDA_teND. [More details]().
+- **\*\*kwargs**: customized parameters for trDA_teND. [More details](dynamic_mode_guide.md).
 ```python
 new_dataset = anda.load_split_datasets_dynamic(
     dataset_name = "MNIST",
@@ -296,7 +296,7 @@ The distribution of testing drifted (unseen to the client).
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for trDR_teDR. [More details]().
+- **\*\*kwargs**: customized parameters for trDR_teDR. [More details](dynamic_mode_guide.md).
 ```python
 new_dataset = anda.load_split_datasets_dynamic(
     dataset_name = "MNIST",
@@ -334,7 +334,7 @@ The distribution of testing is not drifting (seen at least once).
 - **show_features**: bool = False, show generated feature details if any
 - **show_labels**: bool = False, show generated label details if any (also save the imgs)
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for trDR_teND. [More details]().
+- **\*\*kwargs**: customized parameters for trDR_teND. [More details](dynamic_mode_guide.md).
 ```python
 new_dataset = anda.load_split_datasets_dynamic(
     dataset_name = "MNIST",
