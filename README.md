@@ -363,3 +363,5 @@ Results: (showing data from the first client, both training (rounds 1,2,3) and t
 ## To do list
 - define outputs 
 - short description to use them
+- add a requirements.txt with the used libraries (which can be used as ```pip install -r requirements.txt```)
+
