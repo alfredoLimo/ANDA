@@ -282,6 +282,29 @@ The distribution of testing drifted (unseen to the client).
 **Testing: E (unseen)**   
 ![Picture5](https://github.com/user-attachments/assets/65438c66-6cfc-46a1-95a8-9ad24f102a6f)
 
+`load_split_datasets_dynamic` **parameters**
+
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
+- **drfting_type**: str = "trDR_teDR", trDR_teDR mode
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+- **\*\*kwargs**: customized parameters for trDR_teDR. [More details]().
+```python
+new_dataset = anda.load_split_datasets_dynamic(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "Py_x",
+    drfting_type = "trDR_teDR",
+    show_features = True,
+    show_labels = True,
+    random_seed = 42
+)
+```
+Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
+
 ---
 
 ## :large_blue_diamond: MODE trDR_teND
@@ -291,6 +314,29 @@ The distribution of testing is not drifting (seen at least once).
 **Training: A-A-B-B-B-C-C-C-A-A-D-D …**   
 **Testing: A/B/C/D (seen at least once)**  
 ![Picture6](https://github.com/user-attachments/assets/d11f2f12-9ab2-405e-af88-14a0d34cdc3a)
+
+`load_split_datasets_dynamic` **parameters**
+
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
+- **drfting_type**: str = "trDR_teND", trDR_teND mode
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+- **\*\*kwargs**: customized parameters for trDR_teND. [More details]().
+```python
+new_dataset = anda.load_split_datasets_dynamic(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "Px",
+    drfting_type = "trDR_teND",
+    show_features = True,
+    show_labels = True,
+    random_seed = 42
+)
+```
+Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
 # :large_blue_circle: MORE ON NON-IID
 [Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
