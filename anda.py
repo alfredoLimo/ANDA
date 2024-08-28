@@ -336,8 +336,8 @@ def load_split_datasets_dynamic(
     client_number: int = 10,
     non_iid_type: str = "Px",
     drfting_type: str = "trND_teDR",
-    show_features: bool = False,
-    show_labels: bool = False,
+    show_features: bool = True,
+    show_labels: bool = True,
     random_seed: int = 42,
     **kwargs: dict
 ) -> list:
@@ -392,3 +392,4 @@ def load_split_datasets_dynamic(
                                     file_name=f"{dataset_name}_{client_number}_{drfting_type}_{non_iid_type}",
                                     locker_indices=[0,1,2,-1])
 
+    return rearranged_data
