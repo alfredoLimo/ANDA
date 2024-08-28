@@ -249,6 +249,29 @@ The distribution of testing is not drifting (seen at least once).
 **Testing: A/B/C (seen at least once)**   
 ![Picture4](https://github.com/user-attachments/assets/d2faef95-0c55-44e9-b508-a386d2ca1b6e)
 
+`load_split_datasets_dynamic` **parameters**
+
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
+- **drfting_type**: str = "trDA_teND", trDA_teND mode
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+- **\*\*kwargs**: customized parameters for trDA_teND. [More details]().
+```python
+new_dataset = anda.load_split_datasets_dynamic(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "Px_y",
+    drfting_type = "trDA_teND",
+    show_features = True,
+    show_labels = True,
+    random_seed = 42
+)
+```
+Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
+
 ---
 
 ## :large_blue_diamond: MODE trDR_teDR
