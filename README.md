@@ -272,6 +272,11 @@ new_dataset = anda.load_split_datasets_dynamic(
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
+<img src="https://github.com/user-attachments/assets/afba0b47-05cf-4b84-8371-958dfabceb3a" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/8eb89e7e-744f-4766-8fe0-3df8d280d0fe" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/f44170b2-65a4-4cdc-84f7-a190eaa5d3ff" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/750246a8-e326-472a-aebf-44b62ea10da6" alt="Client 0" width="400"/>
+
 ---
 
 ## :large_blue_diamond: MODE trDR_teDR
@@ -305,6 +310,11 @@ new_dataset = anda.load_split_datasets_dynamic(
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
+<img src="https://github.com/user-attachments/assets/039331c9-2af0-4e34-85b3-b85410aff94f" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/489d9db4-261a-4442-8bdb-a4107da96e72" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/a94b362a-5da0-486b-b1c9-60acac08604f" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/c8f23411-1400-48ba-a29f-dae2e9acdb4a" alt="Client 0" width="400"/>
+
 ---
 
 ## :large_blue_diamond: MODE trDR_teND
@@ -337,6 +347,11 @@ new_dataset = anda.load_split_datasets_dynamic(
 )
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
+
+<img src="https://github.com/user-attachments/assets/10093549-43c8-4298-8378-20afd293f539" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/cf2a4731-1819-4379-bc2a-84662504ec0c" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/f8654d18-b607-4705-9727-8bf99c17178e" alt="Client 0" width="400"/>
+<img src="https://github.com/user-attachments/assets/7d218f7b-4ae3-4401-ab68-71400a3975e5" alt="Client 0" width="400"/>
 
 # :large_blue_circle: MORE ON NON-IID
 [Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
