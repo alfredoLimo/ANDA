@@ -75,8 +75,8 @@ drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
 ### non_iid_type = `Px`
 > Creating feature-skewed (Px) sub-datasets with (image) rotation and coloring.
 > A pattern bank will be created based on #rotation and #color.
-Each pattern is considered as a type of P(x) distribution (A/B/C ...).
-Each subset taking a certain pattern for all its datapoints.
+> Each pattern is considered as a type of P(x) distribution (A/B/C ...).
+> Each subset taking a certain pattern for all its datapoints.
 - `rotation_bank: int` The number of rotation patterns. **1** as no rotation.
 - `color_bank: int` The number of color patterns. **1** as no color.
 
@@ -91,17 +91,17 @@ Each subset taking a certain pattern for all its datapoints.
 
 ### non_iid_type = `Px_y`
 > #mixing_num classes will be randomly selected for label-swapping.
-One permutation of classes as a type of P(x|y) distribution (A/B/C ...).
-E.g. mixing_num=3, classes [0,5,7] are selected. The swap_bank will be:
-[0,5,7],[0,7,5],[5,0,7],[5,7,0],[7,0,5],[7,5,0]
+>One permutation of classes as a type of P(x|y) distribution (A/B/C ...).
+>E.g. mixing_num=3, classes [0,5,7] are selected. The swap_bank will be:
+>[0,5,7],[0,7,5],[5,0,7],[5,7,0],[7,0,5],[7,5,0]
 - `mixing_num: int` The number of mixed classes. (Classes randomly chosen)
 
 **Note**: The overall training set is chunked for sub stages (Last stage grows to full size). Tune `DA_dataset_scaling` for an ideal size.
 
 ### non_iid_type = `Py_x`
 > A Px pattern bank will be created based on #rotation and #color.
-A Pyx pattern bank (len = #pyx_pattern_bank_num) will be created as a type of P(y|x) distribution (A/B/C ...).
-Each pattern chooses a Px pattern and applies to #targeted_class_number classes (randomly selected).
+> A Pyx pattern bank (len = #pyx_pattern_bank_num) will be created as a type of P(y|x) distribution (A/B/C ...).
+> Each pattern chooses a Px pattern and applies to #targeted_class_number classes (randomly selected).
 - `rotation_bank: int` The number of rotation patterns. **1** as no rotation.
 - `color_bank: int` The number of color patterns. **1** as no color.
 - `pyx_pattern_bank_num: int` The number of different Pyx distributions. Each distribution has #targeted_class_number classes.
