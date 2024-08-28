@@ -12,7 +12,7 @@
 
 - `set_color: bool` Whether assigning colors.
 
-- `colors: int` The number of possible colors. {2,3}.
+- `colors: int` The number of possible colors. {2,3}
 
 - `scaling_color_low, scaling_color_high: float [0,1]` A scaling factor range (randomly uniformly chosen between) for non-IID-ness with a softmax function. **0** as uniformly distributed, and **1** as highest possible skewed.
 
@@ -39,7 +39,7 @@ Not suggested being used for creating concept drift datasets.
 
 - `set_color: bool` Whether assigning colors.
 
-- `colors: int` The number of possible colors. {2,3}.
+- `colors: int` The number of possible colors. {2,3}
 
 - `scaling_color_low, scaling_color_high: float [0,1]` A scaling factor range (randomly uniformly chosen between) for non-IID-ness with a softmax function. **0** as uniformly distributed, and **1** as highest possible skewed.
 
@@ -84,9 +84,9 @@ Not suggested being used for creating concept drift datasets.
 
 - `random_mode: bool` Randomly choose which labels are in the swapping pool.
 
-- `mixing_label_number: int` The number of types of labels in the pool if `random_mode`.
+- `mixing_label_number: int` The number of the types of classes in the pool if `random_mode`.
 
-- `mixing_label_list: list` If not `random_mode`, provide a list of types of labels for the swapping pool.
+- `mixing_label_list: list` If not `random_mode`, provide a list of the types of classes for the swapping pool.
 
 - `scaling_label_low, scaling_label_high: float [0,1]` The probability range (randomly uniformly chosen between) if a label will be swapped, **0** as of no swapping, **1** as of always swapping.
 
@@ -97,9 +97,9 @@ Not suggested being used for creating concept drift datasets.
 
 - `random_mode: bool` Randomly choose which labels are in the swapping pool.
 
-- `mixing_label_number: int` The number of types of labels in the pool if `random_mode`.
+- `mixing_label_number: int` The number of the types of classes in the pool if `random_mode`.
 
-- `mixing_label_list: list` If not `random_mode`, provide a list of types of labels for the swapping pool.
+- `mixing_label_list: list` If not `random_mode`, provide a list of the types of classes for the swapping pool.
 
 - `scaling_label_low, scaling_label_high: float [0,1]` The probability range (randomly uniformly chosen between) if a label will be swapped, **0** as of no swapping, **1** as of always swapping.
 
@@ -118,17 +118,17 @@ Not suggested being used for creating concept drift datasets.
 
 - `set_color: bool` Whether assigning colors.
 
-- `colors: int` The number of possible colors. {1,2,3}.
+- `colors: int` The number of possible colors. {1,2,3}
 
-- `random_mode: bool` Randomly choose which (images of) labels will be rotated/colored.
+- `random_mode: bool` Randomly choose which (images of) classes will be rotated/colored.
 
-- `rotated_label_number: int` The number of labels to be rotated if `random_mode`.
+- `rotated_label_number: int` The number of classes to be rotated if `random_mode`.
 
-- `colored_label_number: int` The numbers of labels to be colored if `random_mode`.
+- `colored_label_number: int` The number of classes to be colored if `random_mode`.
 
-- `rotated_label_list: list` If not `random_mode`, provide a list of types of labels to be rotated.
+- `rotated_label_list: list` If not `random_mode`, provide a list of the types of classes to be rotated.
 
-- `colored_label_list: list` If not `random_mode`, provide a list of types of labels to be colored.
+- `colored_label_list: list` If not `random_mode`, provide a list of the types of classes to be colored.
 
 - `verbose: bool` Verbose. Print clients' swapping maps.
 
@@ -141,17 +141,17 @@ Not suggested being used for creating concept drift datasets.
 
 - `set_color: bool` Whether assigning colors.
 
-- `colors: int` The number of possible colors. {1,2,3}.
+- `colors: int` The number of possible colors. {1,2,3}
 
-- `random_mode: bool` Randomly choose which (images of) labels will be rotated/colored.
+- `random_mode: bool` Randomly choose which (images of) classes will be rotated/colored.
 
-- `rotated_label_number: int` The number of labels to be rotated if `random_mode`.
+- `rotated_label_number: int` The number of classes to be rotated if `random_mode`.
 
-- `colored_label_number: int` The numbers of labels to be colored if `random_mode`.
+- `colored_label_number: int` The number of classes to be colored if `random_mode`.
 
-- `rotated_label_list: list` If not `random_mode`, provide a list of types of labels to be rotated.
+- `rotated_label_list: list` If not `random_mode`, provide a list of the types of classes to be rotated.
 
-- `colored_label_list: list` If not `random_mode`, provide a list of types of labels to be colored.
+- `colored_label_list: list` If not `random_mode`, provide a list of the types of classes to be colored.
 
 - `std_dev: float` Standard deviation of the normal distribution for the data partition. A higher number indicates more unbalanced.
 
@@ -166,9 +166,9 @@ Not suggested being used for creating concept drift datasets.
 
 - `random_mode: bool` Randomly choose which labels are in the swapping pool.
 
-- `mixing_label_number: int` The number of types of labels in the pool if `random_mode`.
+- `mixing_label_number: int` The number of the types of classes in the pool if `random_mode`.
 
-- `mixing_label_list: list` If not `random_mode`, provide a list of types of labels for the swapping pool.
+- `mixing_label_list: list` If not `random_mode`, provide a list of the types of classes for the swapping pool.
 
 - `scaling_swapping_low, scaling_swapping_high: float [0,1]` The probability range (randomly uniformly chosen between) if a label will be swapped, **0** as of no swapping, **1** as of always swapping.
 
@@ -185,16 +185,16 @@ Not suggested being used for creating concept drift datasets.
 
 - `set_color: bool` Whether assigning colors.
 
-- `colors: int` The number of possible colors. {1,2,3}.
+- `colors: int` The number of possible colors. {1,2,3}
 
-- `random_mode: bool` Randomly choose which (images of) labels will be rotated/colored.
+- `random_mode: bool` Randomly choose which (images of) classes will be rotated/colored.
 
-- `rotated_label_number: int` The number of labels to be rotated if `random_mode`.
+- `rotated_label_number: int` The number of classes to be rotated if `random_mode`.
 
-- `colored_label_number: int` The numbers of labels to be colored if `random_mode`.
+- `colored_label_number: int` The number of classes to be colored if `random_mode`.
 
-- `rotated_label_list: list` If not `random_mode`, provide a list of types of labels to be rotated.
+- `rotated_label_list: list` If not `random_mode`, provide a list of the types of classes to be rotated.
 
-- `colored_label_list: list` If not `random_mode`, provide a list of types of labels to be colored.
+- `colored_label_list: list` If not `random_mode`, provide a list of the types of classes to be colored.
 
 - `verbose: bool` Verbose. Print clients' swapping maps.
