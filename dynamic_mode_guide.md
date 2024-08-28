@@ -35,3 +35,27 @@ Resembles static (\\) mode as the training set is not changing during all epochs
 - `rotated_label_number: int` The number of labels (classes) to rotate.
 - `colored_label_number: int` The number of labels (classes) to color.
 - `verbose: bool` Whether to print the distribution information.
+
+## Mode **`trDA_teDR`** **`trDA_teND`** **`trDR_teDR`** **`trDR_teND`**
+
+All the four modes share the same following parameters (**DA**) for the dynamic setting. (non-IID type agnostic)
+
+#### `DA_dataset_scaling: float`
+The scaling factor for the training dataset. (size = original size * dataset_scaling)
+Different non-IID types take various ways to drift datasets. A recommended range is given in later sections.
+#### `DA_epoch_locker_num: int`
+The number of dataset growth/changing stages during overall training.
+E.g., 2 means the dataset grows/changes once (two stages), and an indicator float=0, 0.5 will be labeled to the sub-dataset to let known when to grow/change. (Accordingly, 3 gives float=0, 0.33, 0.67)
+Use `DA_epoch_locker_num` in your training to apply the correct datasets w.r.t. the locker tag.
+#### `DA_random_locker: bool`
+If `True`, the locker float is randomly generated. Otherwise, it is uniformly generated.
+#### `DA_max_dist: int`
+The maximum distribution types during overall training.
+Setting to 1 means the dataset distribution will not change during the training.
+Setting to 3 means the dataset distribution will change **at maximum** three times during the training.
+**Note**: Upper limit standing for certain types of non-IID setting.
+#### `DA_continual_divergence: bool`
+Whether the distribution drifts continually.
+E.g. when `True`, (example with accumulation)
+drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDE] is VALID. (continual)
+drifting as [A]-[AB]-[ABC]-[ABCD]-[ABCDA] is INVALID. (back to dist A)
