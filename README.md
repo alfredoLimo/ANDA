@@ -29,7 +29,8 @@ new_dataset_dynamic = anda.load_split_datasets_dynamic()
 ```
 
 # :large_blue_circle: STATIC VS DYNAMIC NON-IID
-In **static non-IID datasets**, clients may have different data distributions, but the training and testing sets of each are from the same distribution. In **dynamic/drifting non-IID datasets**, the training and testing sets are furthermore from different distributions.
+- **Static Non-IID Datasets**: In static non-IID datasets, clients have data distributions that differ from one another. However, within each client, the distribution of the data in the training and testing sets remains consistent and unchanging throughout the training process.
+- **Dynamic/Drifting Non-IID Datasets**: In dynamic or drifting non-IID datasets, the data distributions of the training and testing sets can vary, even within the same client. Additionally, the distribution of the training data may shift over time during the training process, leading to potential changes in the model’s learning environment.
 
 <table>
   <tr>
@@ -357,3 +358,8 @@ Results: (showing data from the first client, both training (rounds 1,2,3) and t
 [Independent and identically distributed (IID) random variables](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables)
 
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
+
+
+## To do list
+- define outputs 
+- short description to use them
