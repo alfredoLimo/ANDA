@@ -432,7 +432,4 @@ Results: (showing data from the first client, both training (rounds 1,2,3) and t
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
 
 # :large_blue_circle: TODO LIST
-
 - Scripts for quick start with FL libs (PySyft, Flower, etc.)
-- add a requirements.txt with the used libraries (which can be used as ```pip install -r requirements.txt```)
-
