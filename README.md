@@ -18,6 +18,7 @@
  
 # :large_blue_circle: USAGE WITH ONE LINE
 - Clone ANDA repo to your working repo.
+- Go to the ANDA repo `pip install -r requirements.txt` if needed.
 - Create the default static/dynamic non-IID dataset with one line using `load_split_datasets` or `load_split_datasets_dynamic` as following:
 ```python
 from ANDA import anda
