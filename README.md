@@ -121,6 +121,15 @@ new_dataset = anda.load_split_datasets(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# len(new_dataset) = 10 (client_number)
+# new_dataset[0].keys() = {
+#    'train_features': torch.Tensor
+#    'train_labels': torch.Tensor
+#    'test_features': torch.Tensor
+#    'test_labels': torch.Tensor
+# }
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
 
@@ -155,6 +164,15 @@ new_dataset = anda.load_split_datasets(
     random_mode = True,
     colored_label_number = 4,
 )
+
+# output format
+# len(new_dataset) = 10 (client_number)
+# new_dataset[0].keys() = {
+#    'train_features': torch.Tensor
+#    'train_labels': torch.Tensor
+#    'test_features': torch.Tensor
+#    'test_labels': torch.Tensor
+# }
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
 
@@ -195,6 +213,15 @@ new_dataset = anda.load_split_datasets_dynamic(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# len(new_dataset) = 10 (client_number)
+# new_dataset[0].keys() = {
+#    'train_features': torch.Tensor
+#    'train_labels': torch.Tensor
+#    'test_features': torch.Tensor
+#    'test_labels': torch.Tensor
+# }
 ```
 Results: (showing data from the first client, both training and testing sets)
 
@@ -232,6 +259,17 @@ new_dataset = anda.load_split_datasets_dynamic(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# new_dataset[0].keys() = {
+#    'train': bool, True for training set, False for testing set
+#    'features': torch.Tensor
+#    'labels': torch.Tensor
+#    'client_number': int, client number
+#    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
+#                0.0: the first epoch, 1.0: the last epoch (percentage)
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+# }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
@@ -270,6 +308,17 @@ new_dataset = anda.load_split_datasets_dynamic(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# new_dataset[0].keys() = {
+#    'train': bool, True for training set, False for testing set
+#    'features': torch.Tensor
+#    'labels': torch.Tensor
+#    'client_number': int, client number
+#    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
+#                0.0: the first epoch, 1.0: the last epoch (percentage)
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+# }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
@@ -308,6 +357,17 @@ new_dataset = anda.load_split_datasets_dynamic(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# new_dataset[0].keys() = {
+#    'train': bool, True for training set, False for testing set
+#    'features': torch.Tensor
+#    'labels': torch.Tensor
+#    'client_number': int, client number
+#    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
+#                0.0: the first epoch, 1.0: the last epoch (percentage)
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+# }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
@@ -346,6 +406,17 @@ new_dataset = anda.load_split_datasets_dynamic(
     show_labels = True,
     random_seed = 42
 )
+
+# output format
+# new_dataset[0].keys() = {
+#    'train': bool, True for training set, False for testing set
+#    'features': torch.Tensor
+#    'labels': torch.Tensor
+#    'client_number': int, client number
+#    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
+#                0.0: the first epoch, 1.0: the last epoch (percentage)
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+# }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
 
@@ -359,9 +430,8 @@ Results: (showing data from the first client, both training (rounds 1,2,3) and t
 
 [Federated learning on non-IID data: A survey](https://www.sciencedirect.com/science/article/pii/S0925231221013254)
 
+# :large_blue_circle: TODO LIST
 
-## To do list
-- define outputs 
-- short description to use them
+- Scripts for quick start with FL libs (PySyft, Flower, etc.)
 - add a requirements.txt with the used libraries (which can be used as ```pip install -r requirements.txt```)
 
