@@ -24,8 +24,8 @@ def split_trDR_teDR_Px(
     test_features: torch.Tensor,
     test_labels: torch.Tensor,
     client_number: int = 10,
-    rotation_bank: int = 1,
-    color_bank: int = 1,
+    rotation_bank: int = 2,
+    color_bank: int = 3,
     DA_dataset_scaling: float = 1.5,
     DA_epoch_locker_num: int = 10,
     DA_random_locker: bool = False,
@@ -180,7 +180,8 @@ def split_trDR_teDR_Px(
                 'labels': label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
-                'epoch_locker_order': i
+                'epoch_locker_order': i,
+                'cluster': train_dist[i]
             })
 
         # testing set
@@ -194,7 +195,8 @@ def split_trDR_teDR_Px(
             'labels': cur_test_label,
             'client_number': client_Count,
             'epoch_locker_indicator': -1.0,
-            'epoch_locker_order': -1
+            'epoch_locker_order': -1,
+            'cluster': test_dist
         })
 
         client_Count += 1
@@ -335,7 +337,8 @@ def split_trDR_teDR_Py(
                 'labels': filtered_train_label,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
-                'epoch_locker_order': i
+                'epoch_locker_order': i,
+                'cluster': train_dist[i]
             })
 
         # testing set
@@ -351,7 +354,8 @@ def split_trDR_teDR_Py(
             'labels': filtered_test_label,
             'client_number': client_Count,
             'epoch_locker_indicator': -1.0,
-            'epoch_locker_order': -1
+            'epoch_locker_order': -1,
+            'cluster': test_dist
         })
 
         client_Count += 1
@@ -364,7 +368,7 @@ def split_trDR_teDR_Px_y(
     test_features: torch.Tensor,
     test_labels: torch.Tensor,
     client_number: int = 10,
-    mixing_num: int = 4,
+    mixing_num: int = 3,
     DA_dataset_scaling: float = 1.5,
     DA_epoch_locker_num: int = 10,
     DA_random_locker: bool = False,
@@ -513,7 +517,8 @@ def split_trDR_teDR_Px_y(
                 'labels': remapped_label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
-                'epoch_locker_order': i
+                'epoch_locker_order': i,
+                'cluster': train_dist[i]
             })
 
         # Testing set
@@ -528,7 +533,8 @@ def split_trDR_teDR_Px_y(
             'labels': remapped_label,
             'client_number': client_Count,
             'epoch_locker_indicator': -1.0,
-            'epoch_locker_order': -1
+            'epoch_locker_order': -1,
+            'cluster': test_dist
         })
 
         client_Count += 1
@@ -720,7 +726,8 @@ def split_trDR_teDR_Py_x(
                 'labels': label_chunk,
                 'client_number': client_Count,
                 'epoch_locker_indicator': lockers[i],
-                'epoch_locker_order': i
+                'epoch_locker_order': i,
+                'cluster': train_dist[i]
             })
 
         # testing set
@@ -739,7 +746,8 @@ def split_trDR_teDR_Py_x(
             'labels': cur_test_label,
             'client_number': client_Count,
             'epoch_locker_indicator': -1.0,
-            'epoch_locker_order': -1
+            'epoch_locker_order': -1,
+            'cluster': test_dist
         })
 
         client_Count += 1

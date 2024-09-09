@@ -269,7 +269,8 @@ new_dataset = anda.load_split_datasets_dynamic(
 #    'client_number': int, client number
 #    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
 #                0.0: the first epoch, 1.0: the last epoch (percentage)
-#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator
+#    'cluster': int, the cluster identity of the sub-dataset
 # }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
@@ -318,7 +319,8 @@ new_dataset = anda.load_split_datasets_dynamic(
 #    'client_number': int, client number
 #    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
 #                0.0: the first epoch, 1.0: the last epoch (percentage)
-#    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+#    'epoch_locker_order': int, the order of the epoch_locker_indicator
+#    'cluster': int, the cluster identity of the sub-dataset
 # }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
@@ -368,6 +370,7 @@ new_dataset = anda.load_split_datasets_dynamic(
 #    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
 #                0.0: the first epoch, 1.0: the last epoch (percentage)
 #    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+#    'cluster': int, the cluster identity of the sub-dataset
 # }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
@@ -417,6 +420,7 @@ new_dataset = anda.load_split_datasets_dynamic(
 #    'epoch_locker_indicator': float [0.0, 1.0], indicating data updating time
 #                0.0: the first epoch, 1.0: the last epoch (percentage)
 #    'epoch_locker_order': int, the order of the epoch_locker_indicator 
+#    'cluster': int, the cluster identity of the sub-dataset
 # }
 ```
 Results: (showing data from the first client, both training (rounds 1,2,3) and testing sets)
