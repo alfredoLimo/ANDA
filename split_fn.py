@@ -183,16 +183,16 @@ def split_label_skew(
     for i in range(client_number):
         
         # For the last client, take all remaining data
-        if i == client_number - 1:
+        # if i == client_number - 1:
 
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+        #     client_data = {
+        #         'train_features': remaining_train_features,
+        #         'train_labels': remaining_train_labels,
+        #         'test_features': remaining_test_features,
+        #         'test_labels': remaining_test_labels
+        #     } 
+        #     rearranged_data.append(client_data)
+        #     break
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -507,15 +507,15 @@ def split_label_skew_unbalanced(
     for i in range(client_number):
         print(f'Client {i+1} - Train: {train_samples_per_client[i]} Test: {test_samples_per_client[i]}') if verbose else None
 
-        if i == client_number - 1:
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+        # if i == client_number - 1:
+        #     client_data = {
+        #         'train_features': remaining_train_features,
+        #         'train_labels': remaining_train_labels,
+        #         'test_features': remaining_test_features,
+        #         'test_labels': remaining_test_labels
+        #     } 
+        #     rearranged_data.append(client_data)
+        #     break
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
