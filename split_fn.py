@@ -184,7 +184,7 @@ def split_label_skew(
     for i in range(client_number):
         
         # For the last client, take all remaining data
-        if i == client_number - 1:
+        # if i == client_number - 1:
 
         #     client_data = {
         #         'train_features': remaining_train_features,
