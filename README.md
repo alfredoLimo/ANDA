@@ -182,7 +182,59 @@ Results: (showing data from first four clients, try to repeat it with the same s
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/fe9ee7a1-4be5-47bd-b242-bc0a16c96239" alt="Client 2" width="400"/>
 <img src="https://github.com/alfredoLimo/ANDA/assets/68495667/a9b75621-5ad5-4d09-be36-b96e38e7def2" alt="Client 3" width="400"/>
 
+### :small_blue_diamond: CLUSTER WITH 'STRICT'
 
+Two "strict" functions are provided to create P(x) or P(y) only cluster-oriented tasks. (P(x|y) and P(y|x) are already cluster-oriented)
+
+`load_split_datasets` **parameters**
+
+- **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
+- **client_number**: int = 10, number of clients/sub-datasets
+- **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], types of non-IID-ness.
+- **mode**: str = "manual", using MANUAL mode.
+- **show_features**: bool = False, show generated feature details if any
+- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **random_seed**: int = 42, a random seed to repeat your results
+- **\*\*kwargs**: customized parameters for chosen non-IID type.
+
+```python
+new_dataset = anda.load_split_datasets(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "feature_skew_strict",
+    mode = "manual",
+    show_features = True,
+    show_labels = True,
+    random_seed = 42,
+    set_rotation: bool = True,
+    rotations: int = 2,
+    set_color: bool = True,
+    colors: int = 2,
+    show_distribution: bool = True
+)
+# or
+new_dataset = anda.load_split_datasets(
+    dataset_name = "MNIST",
+    client_number = 10,
+    non_iid_type = "label_skew_strict",
+    mode = "manual",
+    show_features = True,
+    show_labels = True,
+    random_seed = 42,
+    client_n_class = 2,
+    py_bank = 5,
+    verbose = True
+)
+
+# output format
+# len(new_dataset) = 10 (client_number)
+# new_dataset[0].keys() = {
+#    'train_features': torch.Tensor
+#    'train_labels': torch.Tensor
+#    'test_features': torch.Tensor
+#    'test_labels': torch.Tensor
+# }
+```
 ---
 
 ## :large_blue_diamond: MODE trND_teDR

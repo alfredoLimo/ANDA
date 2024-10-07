@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from collections import Counter
 from scipy.stats import truncnorm
 
@@ -182,17 +183,17 @@ def split_label_skew(
 
     for i in range(client_number):
         
-        # For the last client, take all remaining data
-        if i == client_number - 1:
+        # # For the last client, take all remaining data
+        # if i == client_number - 1:
 
-            client_data = {
-                'train_features': remaining_train_features,
-                'train_labels': remaining_train_labels,
-                'test_features': remaining_test_features,
-                'test_labels': remaining_test_labels
-            } 
-            rearranged_data.append(client_data)
-            break
+        #     client_data = {
+        #         'train_features': remaining_train_features,
+        #         'train_labels': remaining_train_labels,
+        #         'test_features': remaining_test_features,
+        #         'test_labels': remaining_test_labels
+        #     } 
+        #     rearranged_data.append(client_data)
+        #     break
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -1247,5 +1248,192 @@ def split_label_condition_skew_with_label_skew(
             'test_labels': sub_test_labels
         }        
         rearranged_data.append(client_data)
+
+    return rearranged_data
+
+
+def split_feature_skew_strict(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    set_rotation: bool = True,
+    rotations: int = 2,
+    set_color: bool = True,
+    colors: int = 2,
+    show_distribution: bool = True
+) -> list:
+    '''
+    Splits an overall dataset into a specified number of clusters (clients) with ONLY feature skew.
+    
+    Args:
+        train_features (torch.Tensor): The training dataset features.
+        train_labels (torch.Tensor): The training dataset labels.
+        test_features (torch.Tensor): The testing dataset features.
+        test_labels (torch.Tensor): The testing dataset labels.
+        client_number (int): The number of clients to split the data into.
+        set_rotation (bool): Whether to assign rotations to the features.
+        rotations (int): The number of possible rotations. Recommended to be [2,4].
+        scaling_rotation_low (float): The low bound scaling factor of rotation for the softmax distribution.
+        scaling_rotation_high (float): The high bound scaling factor of rotation for the softmax distribution.
+        set_color (bool): Whether to assign colors to the features.
+        colors (int): The number of colors to assign. Must be [2,3].
+        scaling_color_low (float): The low bound scaling factor of color for the softmax distribution.
+        scaling_color_high (float): The high bound scaling factor of color for the softmax distribution.
+        show_distribution (bool): Whether to print the distribution of the assigned features.
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    '''
+    # Ensure the features and labels have the same number of samples
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
+    # Process train and test splits with rotations if required
+    if set_rotation:
+        client_Count = 0
+        print("Showing rotation distributions..") if show_distribution else None
+
+        for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+
+            len_train = len(client_data_train['labels'])
+            len_test = len(client_data_test['labels'])
+            
+            # Rnadom pick a rotation
+            total_rotations = [random.choice([i * 360 / rotations for i in range(rotations)])] * (len_train + len_test)
+            
+            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
+            client_Count += 1
+
+            # Split the total_rotations list into train and test
+            train_rotations = total_rotations[:len_train]
+            test_rotations = total_rotations[len_train:]
+
+            client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
+            client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
+
+    if set_color:
+        client_Count = 0
+        print("Showing color distributions..") if show_distribution else None
+
+        for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+
+            len_train = len(client_data_train['labels'])
+            len_test = len(client_data_test['labels'])
+
+            # Random pick a color, 1 - invalid
+            color_letters = ['red', 'blue'] if colors == 2 else ['red', 'blue', 'green']
+            total_colors = [random.choice(color_letters)] * (len_train + len_test)
+
+            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
+            client_Count += 1
+
+            # Split the total_colors list into train and test
+            train_colors = total_colors[:len_train]
+            test_colors = total_colors[len_train:]
+
+            client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
+            client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
+
+    rearranged_data = []
+
+    # Iterate through the indices of the lists
+    for i in range(client_number):
+        # Create a new dictionary for each client
+        client_data = {
+            'train_features': basic_split_data_train[i]['features'],
+            'train_labels': basic_split_data_train[i]['labels'],
+            'test_features': basic_split_data_test[i]['features'],
+            'test_labels': basic_split_data_test[i]['labels']
+        }
+        # Append the new dictionary to the list
+        rearranged_data.append(client_data)
+            
+    return rearranged_data
+
+def split_label_skew_strict(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor, 
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor, 
+    client_number: int = 10,
+    client_n_class: int = 2,
+    py_bank: int = 5,
+    verbose: bool = True
+) -> list:
+    '''
+    Splits an overall dataset into a specified number of clusters (clients) with ONLY label skew.
+
+    Args:
+        train_features (torch.Tensor): The training dataset features.
+        train_labels (torch.Tensor): The training dataset labels.
+        test_features (torch.Tensor): The testing dataset features.
+        test_labels (torch.Tensor): The testing dataset labels.
+        client_number (int): The number of clients to split the data into.
+        client_n_class (int): The number of classes for each client.
+        py_bank (int): The number of possible label distributions.
+
+    Warning:
+        Datasets vary in sensitivity to scaling. Fine-tune the scaling factors for each dataset for optimal results.    
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    '''
+    # Ensure the features and labels have the same number of samples
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    label_num = torch.unique(train_labels).size(0)
+    assert 1 <= client_n_class <= label_num, "Invalid number of classes per set."
+
+    avg_points_per_client_train = len(train_labels) // client_number
+    avg_points_per_client_test = len(test_labels) // client_number
+
+    py_class_bank = {i: sorted(np.random.choice(label_num, client_n_class, replace=False).tolist())
+                   for i in range(1, py_bank + 1)}
+    print("Py bank:\n", '\n'.join(f"{key}: {value}" for key, value in py_class_bank.items())) if verbose else None
+    
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
+    rearranged_data = []
+    client_Count = 0
+
+    for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+
+        cur_train_feature = client_data_train['features']
+        cur_train_label = client_data_train['labels']
+        cur_test_feature = client_data_test['features']
+        cur_test_label = client_data_test['labels']
+
+        # generate drifting
+        dist = np.random.choice(list(range(1, py_bank + 1)))
+        print(f"Client: {client_Count}, Distribution: {dist} ") if verbose else None
+
+        # train set
+        locker_classes_tensor = torch.tensor(py_class_bank[dist])
+        mask = torch.isin(cur_train_label, locker_classes_tensor)
+        filtered_train_feature, filtered_train_label  = cur_train_feature[mask], cur_train_label[mask]
+
+        # testing set
+        locker_classes_tensor = torch.tensor(py_class_bank[dist])
+        mask = torch.isin(cur_test_label, locker_classes_tensor)
+        filtered_test_feature, filtered_test_label = cur_test_feature[mask], cur_test_label[mask]
+
+        rearranged_data.append({
+            'train_features': filtered_train_feature,
+            'train_labels': filtered_train_label,
+            'test_features': filtered_test_feature,
+            'test_labels': filtered_test_label
+        })
+
+        client_Count += 1
 
     return rearranged_data
