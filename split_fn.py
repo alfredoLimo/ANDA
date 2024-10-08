@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from collections import Counter
 from scipy.stats import truncnorm
 
@@ -36,7 +35,7 @@ def split_feature_skew(
     scaling_color_low: float = 0.1,
     scaling_color_high: float = 0.1,
     random_order: bool = True,
-    show_distribution: bool = False
+    verbose: bool = False
 ) -> list:
     '''
     Splits an overall dataset into a specified number of clusters (clients) with ONLY feature skew.
@@ -56,7 +55,7 @@ def split_feature_skew(
         scaling_color_low (float): The low bound scaling factor of color for the softmax distribution.
         scaling_color_high (float): The high bound scaling factor of color for the softmax distribution.
         random_order (bool): Whether to shuffle the order of the rotations and colors.
-        show_distribution (bool): Whether to print the distribution of the assigned features.
+        verbose (bool): Whether to print the distribution of the assigned features.
 
     Warning:
         random_order should be identical for both training and testing if not DRIFTING.
@@ -78,7 +77,7 @@ def split_feature_skew(
     # Process train and test splits with rotations if required
     if set_rotation:
         client_Count = 0
-        print("Showing rotation distributions..") if show_distribution else None
+        print("Showing rotation distributions..") if verbose else None
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -89,7 +88,7 @@ def split_feature_skew(
                 np.random.uniform(scaling_rotation_low,scaling_rotation_high), random_order
                 )
             
-            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if verbose else None
             client_Count += 1
 
             # Split the total_rotations list into train and test
@@ -101,7 +100,7 @@ def split_feature_skew(
 
     if set_color:
         client_Count = 0
-        print("Showing color distributions..") if show_distribution else None
+        print("Showing color distributions..") if verbose else None
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -112,7 +111,7 @@ def split_feature_skew(
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
 
-            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_colors))) if verbose else None
             client_Count += 1
 
             # Split the total_colors list into train and test
@@ -131,7 +130,8 @@ def split_feature_skew(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': basic_split_data_train[i]['labels'],
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': basic_split_data_test[i]['labels']
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': -1
         }
         # Append the new dictionary to the list
         rearranged_data.append(client_data)
@@ -182,18 +182,6 @@ def split_label_skew(
     remaining_test_labels = test_labels
 
     for i in range(client_number):
-        
-        # For the last client, take all remaining data
-        # if i == client_number - 1:
-
-        #     client_data = {
-        #         'train_features': remaining_train_features,
-        #         'train_labels': remaining_train_labels,
-        #         'test_features': remaining_test_features,
-        #         'test_labels': remaining_test_labels
-        #     } 
-        #     rearranged_data.append(client_data)
-        #     break
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -206,7 +194,8 @@ def split_label_skew(
             'train_features': sub_train_features,
             'train_labels': sub_train_labels,
             'test_features': sub_test_features,
-            'test_labels': sub_test_labels
+            'test_labels': sub_test_labels,
+            'cluster': -1
         }        
         rearranged_data.append(client_data)
 
@@ -229,7 +218,7 @@ def split_feature_label_skew(
     scaling_color_low: float = 0.1,
     scaling_color_high: float = 0.1,
     random_order: bool = True,
-    show_distribution: bool = False
+    verbose: bool = False
 ) -> list:
     '''
     Splits an overall dataset into a specified number of clusters (clients) with BOTH feature and label skew.
@@ -251,7 +240,7 @@ def split_feature_label_skew(
         scaling_color_low (float): The low bound scaling factor of color for the softmax distribution.
         scaling_color_high (float): The high bound scaling factor of color for the softmax distribution.
         random_order (bool): Whether to shuffle the order of the rotations and colors.
-        show_distribution (bool): Whether to print the distribution of the assigned features.
+        verbose (bool): Whether to print the distribution of the assigned features.
 
     Warning:
         This should not be used for building concept drift datasets, though unavoidable.
@@ -272,7 +261,7 @@ def split_feature_label_skew(
     remaining_test_labels = test_labels
 
     for i in range(client_number):
-        print(f"Client {i} feature distributions:") if show_distribution else None
+        print(f"Client {i} feature distributions:") if verbose else None
 
         probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
 
@@ -290,7 +279,7 @@ def split_feature_label_skew(
                 np.random.uniform(scaling_rotation_low,scaling_rotation_high), random_order
                 )
             
-            print(dict(Counter(total_rotations))) if show_distribution else None
+            print(dict(Counter(total_rotations))) if verbose else None
 
             # Split the total_rotations list into train and test
             train_rotations = total_rotations[:len_train]
@@ -308,7 +297,7 @@ def split_feature_label_skew(
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
             
-            print(dict(Counter(total_colors)),"\n") if show_distribution else None
+            print(dict(Counter(total_colors)),"\n") if verbose else None
 
             # Split the total_colors list into train and test
             train_colors = total_colors[:len_train]
@@ -321,7 +310,8 @@ def split_feature_label_skew(
             'train_features': sub_train_features,
             'train_labels': sub_train_labels,
             'test_features': sub_test_features,
-            'test_labels': sub_test_labels
+            'test_labels': sub_test_labels,
+            'cluster': -1
         }
         rearranged_data.append(client_data)
 
@@ -344,7 +334,7 @@ def split_feature_skew_unbalanced(
     random_order: bool = True,
     std_dev: float = 0.1,
     permute: bool = True,
-    show_distribution: bool = False
+    verbose: bool = False
 ) -> list:
     """
     Splits an overall dataset into a specified number of clusters unbalanced(clients) with feature skew.
@@ -366,7 +356,7 @@ def split_feature_skew_unbalanced(
         random_order (bool): Whether to shuffle the order of the rotations and colors.
         std_dev (float): standard deviation of the normal distribution for the number of samples per client.
         permute (bool): Whether to shuffle the data before splitting.
-        show_distribution (bool): Whether to print the distribution of the assigned features.
+        verbose (bool): Whether to print the distribution of the assigned features.
         
     Returns:
         list: A list of dictionaries where each dictionary contains the features and labels for each client.
@@ -383,8 +373,8 @@ def split_feature_skew_unbalanced(
     basic_split_data_train = split_unbalanced(train_features, train_labels, client_number, std_dev, permute)
     basic_split_data_test = split_unbalanced(test_features, test_labels, client_number, std_dev, permute)
 
-    if show_distribution:
-        print("Showing unbalanced numbers of data points..") if show_distribution else None
+    if verbose:
+        print("Showing unbalanced numbers of data points..") if verbose else None
         client_Count = 0
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
             print(f"Client {client_Count} Train: {len(client_data_train['labels'])} Test: {len(client_data_test['labels'])}")
@@ -393,7 +383,7 @@ def split_feature_skew_unbalanced(
     # Process train and test splits with rotations if required
     if set_rotation:
         client_Count = 0
-        print("Showing rotation distributions..") if show_distribution else None
+        print("Showing rotation distributions..") if verbose else None
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -404,7 +394,7 @@ def split_feature_skew_unbalanced(
                 np.random.uniform(scaling_rotation_low,scaling_rotation_high), random_order
                 )
             
-            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if verbose else None
             client_Count += 1
 
             # Split the total_rotations list into train and test
@@ -416,7 +406,7 @@ def split_feature_skew_unbalanced(
 
     if set_color:
         client_Count = 0
-        print("Showing color distributions..") if show_distribution else None
+        print("Showing color distributions..") if verbose else None
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -427,7 +417,7 @@ def split_feature_skew_unbalanced(
                 np.random.uniform(scaling_color_low,scaling_color_high), random_order
                 )
             
-            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
+            print(f"Client {client_Count}:", dict(Counter(total_colors))) if verbose else None
             client_Count += 1
 
             # Split the total_colors list into train and test
@@ -446,7 +436,8 @@ def split_feature_skew_unbalanced(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': basic_split_data_train[i]['labels'],
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': basic_split_data_test[i]['labels']
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': -1
         }
         # Append the new dictionary to the list
         rearranged_data.append(client_data)
@@ -630,7 +621,8 @@ def split_feature_condition_skew(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': new_train_labels,
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': new_test_labels
+            'test_labels': new_test_labels,
+            'cluster': -1
         }
         # Append the new dictionary to the list
         rearranged_data.append(client_data)
@@ -734,9 +726,10 @@ def split_feature_condition_skew_unbalanced(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': new_train_labels,
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': new_test_labels
+            'test_labels': new_test_labels,
+            'cluster': -1
         }
-        # Append the new dictionary to the list
+
         rearranged_data.append(client_data)
     
     return rearranged_data
@@ -861,9 +854,10 @@ def split_label_condition_skew(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': basic_split_data_train[i]['labels'],
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': basic_split_data_test[i]['labels']
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': -1
         }
-        # Append the new dictionary to the list
+
         rearranged_data.append(client_data)
             
     return rearranged_data
@@ -993,9 +987,10 @@ def split_label_condition_skew_unbalanced(
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': basic_split_data_train[i]['labels'],
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': basic_split_data_test[i]['labels']
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': -1
         }
-        # Append the new dictionary to the list
+
         rearranged_data.append(client_data)
             
     return rearranged_data
@@ -1113,7 +1108,8 @@ def split_feature_condition_skew_with_label_skew(
             'train_features': sub_train_features,
             'train_labels': new_train_labels,
             'test_features': sub_test_features,
-            'test_labels': new_test_labels
+            'test_labels': new_test_labels,
+            'cluster': -1
         }        
         rearranged_data.append(client_data)
 
@@ -1245,7 +1241,8 @@ def split_label_condition_skew_with_label_skew(
             'train_features': sub_train_features,
             'train_labels': sub_train_labels,
             'test_features': sub_test_features,
-            'test_labels': sub_test_labels
+            'test_labels': sub_test_labels,
+            'cluster': -1
         }        
         rearranged_data.append(client_data)
 
@@ -1261,7 +1258,7 @@ def split_feature_skew_strict(
     rotations: int = 2,
     set_color: bool = True,
     colors: int = 2,
-    show_distribution: bool = True
+    verbose: bool = True
 ) -> list:
     '''
     Splits an overall dataset into a specified number of clusters (clients) with ONLY feature skew.
@@ -1280,7 +1277,7 @@ def split_feature_skew_strict(
         colors (int): The number of colors to assign. Must be [2,3].
         scaling_color_low (float): The low bound scaling factor of color for the softmax distribution.
         scaling_color_high (float): The high bound scaling factor of color for the softmax distribution.
-        show_distribution (bool): Whether to print the distribution of the assigned features.
+        verbose (bool): Whether to print the distribution of the assigned features.
 
     Returns:
         list: A list of dictionaries where each dictionary contains the features and labels for each client.
@@ -1294,64 +1291,43 @@ def split_feature_skew_strict(
     basic_split_data_train = split_basic(train_features, train_labels, client_number)
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
 
+    n_rotations = [i * 360 / rotations for i in range(rotations)]
+    n_colors = ['red', 'blue'] if colors == 2 else ['red', 'blue', 'green']
+    pattern_bank = {i: [r, c] for i, (r, c) in enumerate([(r, c) for r in n_rotations for c in n_colors])}
+    client_clusters = np.random.randint(0, len(pattern_bank), size=client_number).tolist()
+
+    print("Pattern bank:\n", '\n'.join(f"{key}: {value}" for key, value in pattern_bank.items())) if verbose else None
+    print("Client clusters:", client_clusters) if verbose else None
+
     # Process train and test splits with rotations if required
-    if set_rotation:
-        client_Count = 0
-        print("Showing rotation distributions..") if show_distribution else None
+    client_Count = 0
+    for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
-        for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+        len_train, len_test = len(client_data_train['labels']), len(client_data_test['labels'])
+        cur_cluster = client_clusters[client_Count]
 
-            len_train = len(client_data_train['labels'])
-            len_test = len(client_data_test['labels'])
-            
-            # Rnadom pick a rotation
-            total_rotations = [random.choice([i * 360 / rotations for i in range(rotations)])] * (len_train + len_test)
-            
-            print(f"Client {client_Count}:", dict(Counter(total_rotations))) if show_distribution else None
-            client_Count += 1
+        # Handle rotation if required
+        if set_rotation:
+            client_data_train['features'] = rotate_dataset(client_data_train['features'], [pattern_bank[cur_cluster][0]] * len_train)
+            client_data_test['features'] = rotate_dataset(client_data_test['features'], [pattern_bank[cur_cluster][0]] * len_test)
 
-            # Split the total_rotations list into train and test
-            train_rotations = total_rotations[:len_train]
-            test_rotations = total_rotations[len_train:]
+        if set_color:
+            client_data_train['features'] = color_dataset(client_data_train['features'], [pattern_bank[cur_cluster][1]] * len_train)
+            client_data_test['features'] = color_dataset(client_data_test['features'], [pattern_bank[cur_cluster][1]] * len_test)
 
-            client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
-            client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
-
-    if set_color:
-        client_Count = 0
-        print("Showing color distributions..") if show_distribution else None
-
-        for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
-
-            len_train = len(client_data_train['labels'])
-            len_test = len(client_data_test['labels'])
-
-            # Random pick a color, 1 - invalid
-            color_letters = ['red', 'blue'] if colors == 2 else ['red', 'blue', 'green']
-            total_colors = [random.choice(color_letters)] * (len_train + len_test)
-
-            print(f"Client {client_Count}:", dict(Counter(total_colors))) if show_distribution else None
-            client_Count += 1
-
-            # Split the total_colors list into train and test
-            train_colors = total_colors[:len_train]
-            test_colors = total_colors[len_train:]
-
-            client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
-            client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
+        client_Count += 1
 
     rearranged_data = []
 
     # Iterate through the indices of the lists
     for i in range(client_number):
-        # Create a new dictionary for each client
         client_data = {
             'train_features': basic_split_data_train[i]['features'],
             'train_labels': basic_split_data_train[i]['labels'],
             'test_features': basic_split_data_test[i]['features'],
-            'test_labels': basic_split_data_test[i]['labels']
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': client_clusters[i]
         }
-        # Append the new dictionary to the list
         rearranged_data.append(client_data)
             
     return rearranged_data
@@ -1363,7 +1339,7 @@ def split_label_skew_strict(
     test_labels: torch.Tensor, 
     client_number: int = 10,
     client_n_class: int = 2,
-    py_bank: int = 5,
+    py_bank: int = 3,
     verbose: bool = True
 ) -> list:
     '''
@@ -1430,7 +1406,8 @@ def split_label_skew_strict(
             'train_features': filtered_train_feature,
             'train_labels': filtered_train_label,
             'test_features': filtered_test_feature,
-            'test_labels': filtered_test_label
+            'test_labels': filtered_test_label,
+            'cluster': dist
         })
 
         client_Count += 1
