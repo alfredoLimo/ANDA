@@ -822,13 +822,7 @@ def split_label_condition_skew(
     if set_color:
         client_Count = 0
         print("Showing colored labels for each client..") if verbose else None
-
-        if colors == 1:
-            letters = ['red']
-        elif colors == 2:
-            letters = ['red', 'blue']
-        else:
-            letters = ['red', 'blue', 'green']
+        letters = ['red', 'blue', 'green'][:colors]
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -956,12 +950,7 @@ def split_label_condition_skew_unbalanced(
         client_Count = 0
         print("Showing colored labels for each client..") if verbose else None
 
-        if colors == 1:
-            letters = ['red']
-        elif colors == 2:
-            letters = ['red', 'blue']
-        else:
-            letters = ['red', 'blue', 'green']
+        letters = ['red', 'blue', 'green'][:colors]
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
@@ -1192,12 +1181,7 @@ def split_label_condition_skew_with_label_skew(
     remaining_test_features = test_features
     remaining_test_labels = test_labels
 
-    if colors == 1:
-        letters = ['red']
-    elif colors == 2:
-        letters = ['red', 'blue']
-    else:
-        letters = ['red', 'blue', 'green']
+    letters = ['red', 'blue', 'green'][:colors]
 
     for i in range(client_number):
         print(f'Showing mappings for Client {i}') if verbose else None
@@ -1511,3 +1495,128 @@ def split_feature_condition_skew_strict(
     
     return rearranged_data
 
+def split_label_condition_skew_strict(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    set_rotation: bool = False,
+    rotations: int = 2,
+    set_color: bool = True,
+    colors: int = 3,
+    random_mode: bool = True,
+    rotated_label_number: int = 2,
+    colored_label_number: int = 2,
+    rotated_label_list: list = None,
+    colored_label_list: list = None,
+    verbose: bool = False
+) -> list:
+    """
+    P(y|x) differs across clients by targeted rotation/coloring.
+
+    Random mode: randomly choose which labels are to be rotated/colored. (#rotated_label_number/#colored_label_number)
+    Non-random mode: a list of labels are provided to be rotated/colored.
+
+    Scaling is not yet supported. Didn't see much point of that.
+
+    Args:
+        train_features (torch.Tensor): The training dataset features.
+        train_labels (torch.Tensor): The training dataset labels.
+        test_features (torch.Tensor): The testing dataset features.
+        test_labels (torch.Tensor): The testing dataset labels.
+        client_number (int): The number of clients to split the data into.
+        set_rotation (bool): Whether to assign rotations to the features.
+        rotations (int): The number of possible rotations. Recommended to be [2,4].
+        set_color (bool): Whether to assign colors to the features.
+        colors (int): The number of colors to assign. Must be [1,2,3].
+        random_mode (bool): Random mode.
+        rotated_label_number (int): The number of labels to rotate in Random mode.
+        colored_label_number (int): The number of labels to color in Random mode.
+        rotated_label_list (list): A list of labels to rotate in Non-random mode.
+        colored_label_list (list): A list of labels to color in Non-random mode.
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    """
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert rotations > 1, "Must have at least 2 rotations. Otherwise turn it off."
+    assert 1 <= colors <= 3, "The number of colors must be 1, 2, or 3."
+    max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
+
+    if random_mode:
+        assert rotated_label_number is not None or colored_label_number is not None, "The number of labels to rotate/color must be provided."
+        rotated_label_list = np.random.choice(range(0, max_label), rotated_label_number,replace=False).tolist()
+        colored_label_list = np.random.choice(range(0, max_label), colored_label_number,replace=False).tolist()
+    else:
+        assert rotated_label_list is not None or colored_label_list is not None, "The list of labels to rotate/color must be provided."
+        assert len(rotated_label_list) == len(set(rotated_label_list)), "Repeated list."
+        assert len(colored_label_list) == len(set(colored_label_list)), "Repeated list."
+        assert all(0 <= label <= max_label for label in rotated_label_list), "Label out of range."
+        assert all(0 <= label <= max_label for label in colored_label_list), "Label out of range."
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
+    angles = [i * 360 / rotations for i in range(rotations)] if set_rotation else [0.0]
+    letters = ['red', 'blue', 'green'][:colors] if set_color else ['gray']
+    permuted_list = list(itertools.product(angles, letters))
+    print("Clusters:\n", '\n'.join(f"{key}: {value}" for key, value in enumerate(permuted_list))) if verbose else None
+
+    client_clusters = np.random.randint(0, len(permuted_list), size=client_number).tolist()
+    print("Client clusters:", client_clusters) if verbose else None
+
+    client_Count = 0
+    
+    for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
+        
+        cur_cluster = client_clusters[client_Count]
+
+        # Rotation handling
+        if set_rotation:
+            rotation_mapping = {
+                label: permuted_list[cur_cluster][0] if label in rotated_label_list else 0.0
+                for label in np.arange(0, max_label+1).tolist()
+            }
+            print(f'Client {client_Count} rotation mapping: {rotation_mapping}') if verbose else None
+
+            train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
+            test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
+
+            client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
+            client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
+
+        # Color handling
+        if set_color:
+            color_mapping = {
+                label: permuted_list[cur_cluster][1] if label in colored_label_list else "gray"
+                for label in np.arange(0, max_label+1).tolist()
+            }
+            print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
+
+            train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
+            test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
+
+            client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
+            client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
+
+        client_Count += 1
+
+    rearranged_data = []
+
+    # Iterate through the indices of the lists
+    for i in range(client_number):
+        # Create a new dictionary for each client
+        client_data = {
+            'train_features': basic_split_data_train[i]['features'],
+            'train_labels': basic_split_data_train[i]['labels'],
+            'test_features': basic_split_data_test[i]['features'],
+            'test_labels': basic_split_data_test[i]['labels'],
+            'cluster': client_clusters[i]
+        }
+
+        rearranged_data.append(client_data)
+            
+    return rearranged_data
