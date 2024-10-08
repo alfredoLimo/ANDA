@@ -1,9 +1,8 @@
 import numpy as np
 from collections import Counter
 from scipy.stats import truncnorm
-
+import itertools
 import torch
-import torch.nn.functional as F
 
 from .utils import *
 
@@ -1413,3 +1412,102 @@ def split_label_skew_strict(
         client_Count += 1
 
     return rearranged_data
+
+def split_feature_condition_skew_strict(
+    train_features: torch.Tensor,
+    train_labels: torch.Tensor,
+    test_features: torch.Tensor,
+    test_labels: torch.Tensor,
+    client_number: int = 10,
+    random_mode: bool = True,
+    mixing_label_number: int = 3,
+    mixing_label_list: list = None,
+    verbose: bool = False
+) -> list:
+    """
+    P(x|y) differs across clients by label swapping.
+
+    Random mode: randomly choose which labels are in the swapping pool. (#mixing_label_number)
+    Non-random mode: a list of labels are provided to be swapped.
+
+    A scaling factor is randomly generated. (scaling_label_low to scaling_label_high)
+    When 1, dirichlet shuffling, when 0, no shuffling.
+
+    Warning:
+        The re-mapping choices of labels are growing with the swapping pool.
+        E.g. When the swapping pool has [1,2,3]. Label '3' could be swapped with both '1' or '2'.
+
+        USE Non-random mode for EMNIST, which is the only dataset doesn't start label from 0.
+
+    Args:
+        train_features (torch.Tensor): The training dataset features.
+        train_labels (torch.Tensor): The training dataset labels.
+        test_features (torch.Tensor): The testing dataset features.
+        test_labels (torch.Tensor): The testing dataset labels.
+        client_number (int): The number of clients to split the data into.
+        random_mode (bool): Random mode.
+        mixing_label_number (int): The number of labels to swap in Random mode.
+        mixing_label_list (list): A list of labels to swap in Non-random mode.
+
+    Returns:
+        list: A list of dictionaries where each dictionary contains the features and labels for each client.
+                Both train and test.
+    """
+    assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
+    assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
+
+    if random_mode:
+        assert mixing_label_number > 0, "The number of labels to swap must be larger than 0."
+        mixing_label_list = np.random.choice(range(0, max_label), mixing_label_number,replace=False).tolist()
+    else:
+        assert mixing_label_list is not None, "The list of labels to swap must be provided."
+        assert len(mixing_label_list) == len(set(mixing_label_list)), "Repeated list."
+        assert all(0 <= label <= max_label for label in mixing_label_list), "Label out of range."
+    
+    # generate basic split
+    basic_split_data_train = split_basic(train_features, train_labels, client_number)
+    basic_split_data_test = split_basic(test_features, test_labels, client_number)
+
+    rearranged_data = []
+
+    print("Showing the label mapping for each client..") if verbose else None
+
+    # Generate clusters
+    all_permutations = itertools.permutations(mixing_label_list)
+    all_label_maps = []
+    for permuted_label_list in all_permutations:
+        label_map = {original: permuted for original, permuted in zip(mixing_label_list, permuted_label_list)}
+        all_label_maps.append(label_map)
+    print("All label maps:\n", '\n'.join(f"{key}: {value}" for key, value in enumerate(all_label_maps))) if verbose else None
+
+    for i in range(client_number):
+        cur_cluster = np.random.randint(0, len(all_label_maps))
+        label_map = all_label_maps[cur_cluster]
+
+        print(f'Client {i} - Cluster {cur_cluster}') if verbose else None
+
+        new_train_labels = basic_split_data_train[i]['labels'].clone()
+        new_test_labels = basic_split_data_test[i]['labels'].clone()
+        
+        for original, permuted in label_map.items():
+            # Create masks to identify where labels are equal to the original label
+            train_mask = (basic_split_data_train[i]['labels'] == original)
+            test_mask = (basic_split_data_test[i]['labels'] == original)
+            
+            # Directly assign the permuted label where the mask is true
+            new_train_labels[train_mask] = permuted
+            new_test_labels[test_mask] = permuted
+
+        client_data = {
+            'train_features': basic_split_data_train[i]['features'],
+            'train_labels': new_train_labels,
+            'test_features': basic_split_data_test[i]['features'],
+            'test_labels': new_test_labels,
+            'cluster': cur_cluster
+        }
+        # Append the new dictionary to the list
+        rearranged_data.append(client_data)
+    
+    return rearranged_data
+
