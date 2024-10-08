@@ -108,8 +108,9 @@ The distribution of training is not drifting along epochs, and the dataset is un
 - **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md)
 - **mode**: str = "auto", using AUTO mode
 - **non_iid_level**: str = "medium", auto setting a level for non-IID, "low","medium", or "high"
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 
 ```python
@@ -119,7 +120,9 @@ new_dataset = anda.load_split_datasets(
     non_iid_type = "feature_skew",
     mode = "auto",
     non_iid_level = "high",
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 
@@ -130,6 +133,7 @@ new_dataset = anda.load_split_datasets(
 #    'train_labels': torch.Tensor
 #    'test_features': torch.Tensor
 #    'test_labels': torch.Tensor
+#    'cluster': int = -1 (not designed for clustering)
 # }
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
@@ -147,8 +151,9 @@ Results: (showing data from first four clients, try to repeat it with the same s
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md).
 - **mode**: str = "manual", using MANUAL mode.
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](static_mode_guide.md).
 
@@ -158,7 +163,9 @@ new_dataset = anda.load_split_datasets(
     client_number = 10,
     non_iid_type = "label_condition_skew",
     mode = "manual",
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42,
     set_color = True,
     colors = 3,
@@ -173,6 +180,7 @@ new_dataset = anda.load_split_datasets(
 #    'train_labels': torch.Tensor
 #    'test_features': torch.Tensor
 #    'test_labels': torch.Tensor
+#    'cluster': int
 # }
 ```
 Results: (showing data from first four clients, try to repeat it with the same seed)
@@ -184,16 +192,17 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 ### :small_blue_diamond: CLUSTER WITH 'STRICT'
 
-Two "strict" functions are provided to create P(x) or P(y) only cluster-oriented tasks. (P(x|y) and P(y|x) are already cluster-oriented)
+"Strict" functions are provided to create datasets for cluster-oriented tasks, with a rational 'cluster' output for each sub-dataset.
 
 `load_split_datasets` **parameters**
 
 - **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
 - **client_number**: int = 10, number of clients/sub-datasets
-- **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], types of non-IID-ness.
+- **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], ["feature_condition_skew_strict", "label_condition_skew_strict"] types of non-IID-ness.
 - **mode**: str = "manual", using MANUAL mode.
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for chosen non-IID type.
 
@@ -203,28 +212,16 @@ new_dataset = anda.load_split_datasets(
     client_number = 10,
     non_iid_type = "feature_skew_strict",
     mode = "manual",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42,
     set_rotation: bool = True,
     rotations: int = 2,
     set_color: bool = True,
     colors: int = 2,
-    show_distribution: bool = True
 )
-# or
-new_dataset = anda.load_split_datasets(
-    dataset_name = "MNIST",
-    client_number = 10,
-    non_iid_type = "label_skew_strict",
-    mode = "manual",
-    show_features = True,
-    show_labels = True,
-    random_seed = 42,
-    client_n_class = 2,
-    py_bank = 5,
-    verbose = True
-)
+# Check the kwargs for the other three fns
 
 # output format
 # len(new_dataset) = 10 (client_number)
@@ -233,6 +230,7 @@ new_dataset = anda.load_split_datasets(
 #    'train_labels': torch.Tensor
 #    'test_features': torch.Tensor
 #    'test_labels': torch.Tensor
+#    'cluster': int (cluster identity)
 # }
 ```
 ---
@@ -252,8 +250,9 @@ The distribution of testing is drifting.
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trND_teDR", trND_teDR mode
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trND_teDR. [More details](dynamic_mode_guide.md).
 ```python
@@ -262,8 +261,9 @@ new_dataset = anda.load_split_datasets_dynamic(
     client_number = 10,
     non_iid_type = "Px",
     drfting_type = "trND_teDR",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 
@@ -298,8 +298,9 @@ The distribution of testing drifted (unseen to the client).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDA_teDR", trDA_teDR mode
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDA_teDR. [More details](dynamic_mode_guide.md).
 ```python
@@ -308,8 +309,9 @@ new_dataset = anda.load_split_datasets_dynamic(
     client_number = 10,
     non_iid_type = "Py",
     drfting_type = "trDA_teDR",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 
@@ -348,8 +350,9 @@ The distribution of testing is not drifting (seen at least once).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDA_teND", trDA_teND mode
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDA_teND. [More details](dynamic_mode_guide.md).
 ```python
@@ -358,8 +361,9 @@ new_dataset = anda.load_split_datasets_dynamic(
     client_number = 10,
     non_iid_type = "Px_y",
     drfting_type = "trDA_teND",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 
@@ -398,8 +402,9 @@ The distribution of testing drifted (unseen to the client).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDR_teDR", trDR_teDR mode
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDR_teDR. [More details](dynamic_mode_guide.md).
 ```python
@@ -408,8 +413,9 @@ new_dataset = anda.load_split_datasets_dynamic(
     client_number = 10,
     non_iid_type = "Py_x",
     drfting_type = "trDR_teDR",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 
@@ -448,8 +454,9 @@ The distribution of testing is not drifting (seen at least once).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDR_teND", trDR_teND mode
-- **show_features**: bool = False, show generated feature details if any
-- **show_labels**: bool = False, show generated label details if any (also save the imgs)
+- **verbose**: bool = False, show generated feature details if any
+- **count_labels**: bool = False, count label details for each client
+- **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDR_teND. [More details](dynamic_mode_guide.md).
 ```python
@@ -458,8 +465,9 @@ new_dataset = anda.load_split_datasets_dynamic(
     client_number = 10,
     non_iid_type = "Px",
     drfting_type = "trDR_teND",
-    show_features = True,
-    show_labels = True,
+    verbose = True,
+    count_labels = True,
+    plot_clients = True,
     random_seed = 42
 )
 

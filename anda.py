@@ -315,7 +315,8 @@ def load_split_datasets(
         fn = f"split_{non_iid_type}"
         if fn in globals():
             rearranged_data = globals()[fn](
-                train_features, train_labels, test_features, test_labels, client_number, verbose = verbose,
+                train_features, train_labels, test_features, test_labels, \
+                client_number, verbose = verbose, \
                 **kwargs, 
             )
         else:
