@@ -198,13 +198,13 @@ Results: (showing data from first four clients, try to repeat it with the same s
 
 - **dataset_name**: str = "MNIST", "EMNIST", "FMNIST", "CIFAR10", or "CIFAR100"
 - **client_number**: int = 10, number of clients/sub-datasets
-- **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], ["feature_condition_skew_strict", "label_condition_skew_strict"] types of non-IID-ness.
+- **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], ["feature_condition_skew_strict", "label_condition_skew_strict"] types of non-IID-ness. [More details](static_mode_guide.md)
 - **mode**: str = "manual", using MANUAL mode.
 - **verbose**: bool = False, show generated feature details if any
 - **count_labels**: bool = False, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
-- **\*\*kwargs**: customized parameters for chosen non-IID type.
+- **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](static_mode_guide.md)
 
 ```python
 new_dataset = anda.load_split_datasets(
