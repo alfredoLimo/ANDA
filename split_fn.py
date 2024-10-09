@@ -145,6 +145,7 @@ def split_label_skew(
     client_number: int = 10,
     scaling_label_low: float = 0.4,
     scaling_label_high: float = 0.6,
+    verbose: bool = True
 ) -> list:
     '''
     Splits an overall dataset into a specified number of clusters (clients) with ONLY label skew.
