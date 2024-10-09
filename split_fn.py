@@ -1270,6 +1270,7 @@ def split_feature_skew_strict(
     # Ensure the features and labels have the same number of samples
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
+    assert colors == 2 or colors == 3, "Invalid color number."
 
     # generate basic split
     basic_split_data_train = split_basic(train_features, train_labels, client_number)
