@@ -183,7 +183,7 @@ def split_label_skew(
 
     for i in range(client_number):
 
-        probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high))
+        probabilities = calculate_probabilities(remaining_train_labels, np.random.uniform(scaling_label_low,scaling_label_high) * 0.6)
 
         sub_train_features, sub_train_labels, remaining_train_features, remaining_train_labels = create_sub_dataset(
             remaining_train_features, remaining_train_labels, probabilities, avg_points_per_client_train)
