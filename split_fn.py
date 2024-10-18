@@ -1374,7 +1374,7 @@ def split_label_skew_strict(
         cur_test_label = client_data_test['labels']
 
         # generate drifting
-        dist = np.random.choice(list(range(1, py_bank + 1)))
+        dist = int(np.random.choice(list(range(1, py_bank + 1))))
         print(f"Client: {client_Count}, Distribution: {dist} ") if verbose else None
 
         # train set
@@ -1468,7 +1468,7 @@ def split_feature_condition_skew_strict(
     print("All label maps:\n", '\n'.join(f"{key}: {value}" for key, value in enumerate(all_label_maps))) if verbose else None
 
     for i in range(client_number):
-        cur_cluster = np.random.randint(0, len(all_label_maps))
+        cur_cluster = int(np.random.randint(0, len(all_label_maps)))
         label_map = all_label_maps[cur_cluster]
 
         print(f'Client {i} - Cluster {cur_cluster}') if verbose else None
