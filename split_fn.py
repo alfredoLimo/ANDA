@@ -1330,7 +1330,8 @@ def split_label_skew_strict(
     client_number: int = 10,
     client_n_class: int = 2,
     py_bank: int = 3,
-    verbose: bool = True
+    verbose: bool = True,
+    extend: bool = True
 ) -> list:
     '''
     Splits an overall dataset into a specified number of clusters (clients) with ONLY label skew.
@@ -1371,6 +1372,8 @@ def split_label_skew_strict(
     rearranged_data = []
     client_Count = 0
 
+    extend_factor = label_num / client_n_class if extend else 1
+
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
         cur_train_feature = client_data_train['features']
@@ -1392,11 +1395,26 @@ def split_label_skew_strict(
         mask = torch.isin(cur_test_label, locker_classes_tensor)
         filtered_test_feature, filtered_test_label = cur_test_feature[mask], cur_test_label[mask]
 
+        extend_size_train = int(filtered_train_feature.shape[0] * (extend_factor - 1))
+        extend_size_test = int(filtered_test_feature.shape[0] * (extend_factor - 1))
+
+        # Repeat random indices to extend the dataset
+        repeat_train_indices = np.random.choice(filtered_train_feature.shape[0], extend_size_train, replace=True)
+        repeat_test_indices = np.random.choice(filtered_test_feature.shape[0], extend_size_test, replace=True)
+
+        # Extend training data
+        extended_train_features = np.concatenate([filtered_train_feature, filtered_train_feature[repeat_train_indices]], axis=0)
+        extended_train_labels = np.concatenate([filtered_train_label, filtered_train_label[repeat_train_indices]], axis=0)
+        
+        # Extend test data
+        extended_test_features = np.concatenate([filtered_test_feature, filtered_test_feature[repeat_test_indices]], axis=0)
+        extended_test_labels = np.concatenate([filtered_test_label, filtered_test_label[repeat_test_indices]], axis=0)
+
         rearranged_data.append({
-            'train_features': filtered_train_feature,
-            'train_labels': filtered_train_label,
-            'test_features': filtered_test_feature,
-            'test_labels': filtered_test_label,
+            'train_features': torch.from_numpy(extended_train_features),
+            'train_labels': torch.from_numpy(extended_train_labels),
+            'test_features': torch.from_numpy(extended_test_features),
+            'test_labels': torch.from_numpy(extended_test_labels),
             'cluster': dist
         })
 
