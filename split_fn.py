@@ -781,7 +781,6 @@ def split_label_condition_skew(
     """
     assert len(train_features) == len(train_labels), "The number of samples in features and labels must be the same."
     assert len(test_features) == len(test_labels), "The number of samples in features and labels must be the same."
-    assert rotations > 1, "Must have at least 2 rotations. Otherwise turn it off."
     assert 1 <= colors <= 3, "The number of colors must be 1, 2, or 3."
     max_label = max(torch.unique(train_labels).size(0), torch.unique(test_labels).size(0))
 
