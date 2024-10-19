@@ -822,7 +822,7 @@ def split_label_condition_skew(
     if set_color:
         client_Count = 0
         print("Showing colored labels for each client..") if verbose else None
-        letters = ['red', 'blue', 'green'][:colors]
+        letters = ['red', 'blue', 'green'][:colors] if colors != 1 else ['gray']
 
         for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
 
