@@ -1296,9 +1296,6 @@ def split_label_skew_strict(
     label_num = torch.unique(train_labels).size(0)
     assert 1 <= client_n_class <= label_num, "Invalid number of classes per set."
 
-    avg_points_per_client_train = len(train_labels) // client_number
-    avg_points_per_client_test = len(test_labels) // client_number
-
     py_class_bank = {i: sorted(np.random.choice(label_num, client_n_class, replace=False).tolist())
                    for i in range(1, py_bank + 1)}
     print("Py bank:\n", '\n'.join(f"{key}: {value}" for key, value in py_class_bank.items())) if verbose else None

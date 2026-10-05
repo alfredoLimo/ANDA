@@ -5,7 +5,7 @@
 # :large_blue_circle: ABOUT ANDA
 **A** **N**on-IID **D**ata generator supporting **A**ny kind. Generate your non-IID datasets with one line.
 
-<sub>06/12/2025: There are minor bugs in plot and P(Y|X) gen functions.</sub>
+<sub>10/2026: Bug fixes and faster generation. All function calls stay the same. See [CHANGES](#large_blue_circle-changes).</sub>
 
 # :large_blue_circle: FEATURES
 - Repeat your Federated Learning (FL) experiments with non-IID datasets and without saving it!
@@ -110,8 +110,8 @@ The distribution of training is not drifting along epochs, and the dataset is un
 - **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md)
 - **mode**: str = "auto", using AUTO mode
 - **non_iid_level**: str = "medium", auto setting a level for non-IID, "low","medium", or "high"
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 
@@ -153,8 +153,8 @@ Results: (showing data from first four clients, try to repeat it with the same s
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "feature_skew", types of non-IID-ness. [More details](static_mode_guide.md).
 - **mode**: str = "manual", using MANUAL mode.
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](static_mode_guide.md).
@@ -202,8 +202,8 @@ Results: (showing data from first four clients, try to repeat it with the same s
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = ["feature_skew_strict", "label_skew_strict"], ["feature_condition_skew_strict", "label_condition_skew_strict"] types of non-IID-ness. [More details](static_mode_guide.md)
 - **mode**: str = "manual", using MANUAL mode.
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for chosen non-IID type. [More details](static_mode_guide.md)
@@ -252,8 +252,8 @@ The distribution of testing is drifting.
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trND_teDR", trND_teDR mode
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trND_teDR. [More details](dynamic_mode_guide.md).
@@ -300,8 +300,8 @@ The distribution of testing drifted (unseen to the client).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDA_teDR", trDA_teDR mode
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDA_teDR. [More details](dynamic_mode_guide.md).
@@ -352,8 +352,8 @@ The distribution of testing is not drifting (seen at least once).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDA_teND", trDA_teND mode
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDA_teND. [More details](dynamic_mode_guide.md).
@@ -404,8 +404,8 @@ The distribution of testing drifted (unseen to the client).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDR_teDR", trDR_teDR mode
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDR_teDR. [More details](dynamic_mode_guide.md).
@@ -456,8 +456,8 @@ The distribution of testing is not drifting (seen at least once).
 - **client_number**: int = 10, number of clients/sub-datasets
 - **non_iid_type**: str = "Px", types of non-IID-ness. ["Px","Py","Px_y","Py_x"]
 - **drfting_type**: str = "trDR_teND", trDR_teND mode
-- **verbose**: bool = False, show generated feature details if any
-- **count_labels**: bool = False, count label details for each client
+- **verbose**: bool = True, show generated feature details if any
+- **count_labels**: bool = True, count label details for each client
 - **plot_clients**: bool = False, plot clients' data distribution
 - **random_seed**: int = 42, a random seed to repeat your results
 - **\*\*kwargs**: customized parameters for trDR_teND. [More details](dynamic_mode_guide.md).
@@ -500,6 +500,27 @@ Results: (showing data from the first client, both training (rounds 1,2,3) and t
 # :large_blue_circle: TODO LIST
 - A few additional customizations for the dynamic modes have been made but not updated in README page.)
 - Scripts for quick start with FL libs (PySyft, Flower, etc.)
+
+# :large_blue_circle: CHANGES
+**10/2026** — bug fixes and speed-ups. All function names, arguments, defaults and output formats are unchanged.
+
+With the same `random_seed`, every mode returns exactly the same data as before, **except** the modes below that had bugs:
+- `label_skew`, `feature_label_skew`, `label_skew_unbalanced`, `label_condition_skew_with_label_skew`, `feature_condition_skew_with_label_skew` and dynamic `trND_teDR` + `Py`:
+  the same image could be given to one client several times (up to 25% of a client's data on MNIST). Each image is now used at most once per client.
+  Clients whose data was drawn without the bug get exactly the same data as before.
+- Dynamic `Px_y` modes (`trDA_teDR`, `trDA_teND`, `trDR_teDR`, `trDR_teND`) were not reproducible: the same `random_seed` gave different data on every run. They are reproducible now.
+
+Other fixes:
+- `plot_clients=True` crashed (and saved blank images in notebooks). It works now.
+- `trDR_teND` + `Py_x` never finished with its default arguments.
+- `feature_condition_skew_unbalanced` crashed when a client received no data (e.g. auto mode, medium/high levels).
+- `feature_condition_skew` crashed when only `set_color=True` was used.
+- `merge_data` crashed on the outputs of the split functions.
+- `count_labels` now counts every class (not only 0-9), e.g. for CIFAR100 and EMNIST.
+- `label_skew_unbalanced` outputs now have the `cluster` key like the other modes.
+- `trDR_teND` modes print debug details only with `verbose=True`.
+
+Dataset loading, rotation and label-based sampling are several times faster.
 
 # :large_blue_circle: Citation
 If you find this work useful for your research, please cite the following papers:

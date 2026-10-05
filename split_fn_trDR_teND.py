@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import random
-from itertools import permutations
 import torch
 from .utils import *
 from .utils import _rotation_angles, _color_names, _extend_dataset, _epoch_lockers, _swap_labels, _targeted_px_pattern
@@ -490,7 +489,6 @@ def split_trDR_teND_Py_x(
     # generate swapping bank
     class_list = sorted(np.random.choice(label_num, mixing_num, replace=False).tolist())
 
-    # all_permutations = list(permutations(class_list))
     all_permutations = []
     seen = set()
     DA_permu_num = min(DA_permu_num, math.factorial(mixing_num)) # there are only mixing_num! permutations
