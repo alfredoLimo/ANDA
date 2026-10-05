@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from .utils import *
+from .utils import _sample_by_label_probability
 
 # For reproducibility only
 def set_seed(
@@ -247,53 +248,17 @@ def split_trND_teDR_Py(
         permuted_test_features = test_features[permuted_test_indices]
         permuted_test_labels = test_labels[permuted_test_indices]
 
-        # Initialize the data lists
-        client_train_features = []
-        client_train_labels = []
-        client_test_features = []
-        client_test_labels = []
-
-        # Training dataset
-        selected_train_points = 0
-        train_idx = 0
-        while selected_train_points < avg_points_per_client_train:
-            current_train_feature = permuted_train_features[train_idx]
-            current_train_label = permuted_train_labels[train_idx]
-
-            train_label_index = train_label_list.index(current_train_label.item())
-            train_label_prob = train_probabilities[train_label_index]
-
-            # If the random number is less than the probability, we select this point
-            if np.random.rand() < train_label_prob:
-                client_train_features.append(current_train_feature.unsqueeze(0))
-                client_train_labels.append(current_train_label.unsqueeze(0))
-                selected_train_points += 1
-
-            train_idx = (train_idx + 1) % len(permuted_train_labels)
-
-        # Testing dataset
-        selected_test_points = 0
-        test_idx = 0
-        while selected_test_points < avg_points_per_client_test:
-            current_test_feature = permuted_test_features[test_idx]
-            current_test_label = permuted_test_labels[test_idx]
-
-            test_label_index = test_label_list.index(current_test_label.item())
-            test_label_prob = test_probabilities[test_label_index]
-
-            # If the random number is less than the probability, we select this point
-            if np.random.rand() < test_label_prob:
-                client_test_features.append(current_test_feature.unsqueeze(0))
-                client_test_labels.append(current_test_label.unsqueeze(0))
-                selected_test_points += 1
-
-            test_idx = (test_idx + 1) % len(permuted_test_labels)
+        # Keep each datapoint with the probability of its label
+        train_indices = _sample_by_label_probability(
+            permuted_train_labels, train_label_list, train_probabilities, avg_points_per_client_train)
+        test_indices = _sample_by_label_probability(
+            permuted_test_labels, test_label_list, test_probabilities, avg_points_per_client_test)
 
         rearranged_data.append({
-            'train_features': torch.cat(client_train_features, dim=0).detach().cpu().numpy(),
-            'train_labels': torch.cat(client_train_labels, dim=0).detach().cpu().numpy(),
-            'test_features': torch.cat(client_test_features, dim=0).detach().cpu().numpy(),
-            'test_labels': torch.cat(client_test_labels, dim=0).detach().cpu().numpy(),
+            'train_features': permuted_train_features[train_indices].detach().cpu().numpy(),
+            'train_labels': permuted_train_labels[train_indices].detach().cpu().numpy(),
+            'test_features': permuted_test_features[test_indices].detach().cpu().numpy(),
+            'test_labels': permuted_test_labels[test_indices].detach().cpu().numpy(),
         })
 
     return rearranged_data
@@ -491,10 +456,10 @@ def split_trND_teDR_Px_y(
 
         client_Count += 1
 
-        train_rotations = [angle_color_map_train[label.item()]['angle'] for label in client_data_train['labels']]
-        train_colors = [angle_color_map_train[label.item()]['color'] for label in client_data_train['labels']]
-        test_rotations = [angle_color_map_test[label.item()]['angle'] for label in client_data_test['labels']]
-        test_colors = [angle_color_map_test[label.item()]['color'] for label in client_data_test['labels']]
+        train_rotations = [angle_color_map_train[label]['angle'] for label in client_data_train['labels'].tolist()]
+        train_colors = [angle_color_map_train[label]['color'] for label in client_data_train['labels'].tolist()]
+        test_rotations = [angle_color_map_test[label]['angle'] for label in client_data_test['labels'].tolist()]
+        test_colors = [angle_color_map_test[label]['color'] for label in client_data_test['labels'].tolist()]
 
         client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
         client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)

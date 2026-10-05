@@ -759,8 +759,8 @@ def split_trDA_teND_Px_y(
             cur_classes = pyx_bank[train_dist[i]]['classes']
             cur_px_pattern = pyx_bank[train_dist[i]]['px_pattern']
 
-            cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in label_chunk]
-            cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in label_chunk]
+            cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in label_chunk.tolist()]
+            cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in label_chunk.tolist()]
 
             # Apply rotation and color transformations
             feature_chunk = rotate_dataset(feature_chunk, cur_angle)
@@ -793,8 +793,8 @@ def split_trDA_teND_Px_y(
         cur_classes = pyx_bank[test_dist]['classes']
         cur_px_pattern = pyx_bank[test_dist]['px_pattern']
 
-        cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in cur_test_label]
-        cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in cur_test_label]
+        cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in cur_test_label.tolist()]
+        cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in cur_test_label.tolist()]
 
         cur_test_feature = rotate_dataset(cur_test_feature, cur_angle)
         cur_test_feature = color_dataset(cur_test_feature, cur_color)

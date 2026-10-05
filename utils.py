@@ -98,10 +98,12 @@ def load_full_datasets(
     else:
         raise ValueError(f"Dataset {dataset_name} is not supported.")
 
-    # Extracting train and test images and labels
-    train_images = torch.stack([data[0] for data in train_dataset]).squeeze(1)
-    test_images = torch.stack([data[0] for data in test_dataset]).squeeze(1)
-    
+    # Extracting train and test images and labels.
+    # Read the raw uint8 arrays directly instead of iterating through PIL images one by one;
+    # the result is identical to ToTensor() (uint8 / 255) but much faster.
+    train_images = _raw_images_to_tensor(train_dataset.data, dataset_name)
+    test_images = _raw_images_to_tensor(test_dataset.data, dataset_name)
+
     if dataset_name in ["CIFAR10", "CIFAR100"]:
         train_labels = torch.tensor(train_dataset.targets).clone().detach()
         test_labels = torch.tensor(test_dataset.targets).clone().detach()
@@ -110,6 +112,31 @@ def load_full_datasets(
         test_labels = test_dataset.targets.clone().detach()
 
     return [train_images, train_labels, test_images, test_labels]
+
+def _raw_images_to_tensor(
+    data,
+    dataset_name: str
+) -> torch.Tensor:
+    '''
+    Converts the raw uint8 image array stored in a torchvision dataset into a float tensor,
+    exactly as ToTensor() would do image by image.
+    '''
+    images = torch.as_tensor(data)
+    if dataset_name in ["CIFAR10", "CIFAR100"]:
+        images = images.permute(0, 3, 1, 2) # (N, H, W, 3) -> (N, 3, H, W)
+    elif dataset_name == "EMNIST":
+        images = images.transpose(1, 2) # same as rotating by -90 degrees and flipping horizontally
+    return images.contiguous().float().div(255)
+
+def _pil_rotate(
+    img_tensor: torch.Tensor,
+    degree: float
+) -> torch.Tensor:
+    '''
+    Rotates one image through PIL (used for angles that are not a multiple of 90 degrees).
+    '''
+    img = transforms.ToPILImage()(img_tensor)
+    return transforms.ToTensor()(img.rotate(degree)).squeeze(0)
 
 def rotate_dataset(
     dataset: torch.Tensor,
@@ -128,23 +155,26 @@ def rotate_dataset(
 
     if len(dataset) != len(degrees):
         raise ValueError("The length of degrees list must be equal to the number of images in the dataset.")
-    
-    rotated_images = []
-    
-    for img_tensor, degree in zip(dataset, degrees):
-        # Convert the tensor to a PIL image
-        img = transforms.ToPILImage()(img_tensor)
-        # Rotate the image
-        rotated_img = img.rotate(degree)
-        
-        # Convert the PIL image back to a tensor
-        rotated_img_tensor = transforms.ToTensor()(rotated_img).squeeze(0)
-        
-        rotated_images.append(rotated_img_tensor)
-    
-    # Stack all tensors into a single tensor
-    rotated_dataset = torch.stack(rotated_images)
-    
+
+    if len(dataset) == 0:
+        return dataset.clone()
+
+    # Images used to go through PIL (as 8-bit images) one by one. Reproduce the same 8-bit
+    # rounding here, then rotate whole groups of images at once.
+    quantized = dataset.mul(255).byte().float().div(255)
+    rotated_dataset = torch.empty_like(quantized)
+
+    degrees = np.asarray(degrees, dtype=float) % 360.0
+    square = dataset.shape[-1] == dataset.shape[-2]
+
+    for degree in np.unique(degrees):
+        idx = torch.from_numpy(np.nonzero(degrees == degree)[0])
+        if degree % 180 == 0 or (degree % 90 == 0 and square):
+            # PIL rotates counter-clockwise by transposing pixels for these angles, same as rot90
+            rotated_dataset[idx] = torch.rot90(quantized[idx], int(degree // 90), dims=(-2, -1))
+        else:
+            rotated_dataset[idx] = torch.stack([_pil_rotate(dataset[i], degree) for i in idx.tolist()])
+
     return rotated_dataset
 
 def color_dataset(
@@ -177,18 +207,14 @@ def color_dataset(
     else:
         raise ValueError("This function only supports 1-channel (N, H, W) or 3-channel (N, 3, H, W) datasets.")
 
-    for i, color in enumerate(colors):
-        # Map the grayscale values to the specified color
-        if color == 'red':
-            colored_dataset[i, 0, :, :] = 1  # Set the red channel for the image
-        elif color == 'green':
-            colored_dataset[i, 1, :, :] = 1  # Set the green channel for the image
-        elif color == 'blue':
-            colored_dataset[i, 2, :, :] = 1  # Set the blue channel for the image
-        elif color == "gray":
-            pass
-        else:
-            raise ValueError("Color must be 'red', 'green', or 'blue'")
+    colors = np.asarray(colors, dtype=str)
+    if not np.isin(colors, ['red', 'green', 'blue', 'gray']).all():
+        raise ValueError("Color must be 'red', 'green', or 'blue'")
+
+    # Map the grayscale values to the specified color by setting that channel to 1
+    for channel, color in enumerate(['red', 'green', 'blue']):
+        idx = torch.from_numpy(np.nonzero(colors == color)[0])
+        colored_dataset[idx, channel, :, :] = 1
 
     return colored_dataset
 
@@ -454,15 +480,25 @@ def create_sub_dataset(
         probabilities, 
         num_points
 ):
-    selected_indices = []
-    while len(selected_indices) < num_points:
-        for i in range(len(labels)):
-            if torch.rand(1).item() < probabilities[labels[i]].item():
-                selected_indices.append(i)
-            if len(selected_indices) >= num_points:
-                break
-    
-    selected_indices = torch.tensor(selected_indices)
+    # Walk over the datapoints and keep each one with the probability of its label,
+    # one pass after another until num_points are selected.
+    # Each pass draws its random numbers in one call; the generator is then rewound so that exactly
+    # as many numbers are consumed as a point-by-point loop would consume.
+    point_probabilities = probabilities[labels]
+    selected_chunks = []
+    selected_number = 0
+    while selected_number < num_points:
+        rng_state = torch.get_rng_state()
+        hits = torch.nonzero(torch.rand(len(labels)) < point_probabilities).flatten()
+        missing = num_points - selected_number
+        if len(hits) >= missing:
+            hits = hits[:missing]
+            torch.set_rng_state(rng_state)
+            torch.rand(hits[-1].item() + 1)
+        selected_chunks.append(hits)
+        selected_number += len(hits)
+
+    selected_indices = torch.cat(selected_chunks) if selected_chunks else torch.empty(0, dtype=torch.long)
     sub_features = features[selected_indices]
     sub_labels = labels[selected_indices]
     remaining_indices = torch.ones(len(labels), dtype=torch.bool)
@@ -471,6 +507,39 @@ def create_sub_dataset(
     remaining_labels = labels[remaining_indices]
 
     return sub_features, sub_labels, remaining_features, remaining_labels
+
+def _sample_by_label_probability(
+    labels: torch.Tensor,
+    label_order: list,
+    probabilities: np.ndarray,
+    num_points: int
+) -> torch.Tensor:
+    '''
+    Cycles over the datapoints and keeps each one with probability probabilities[label_order.index(label)]
+    until num_points are kept. Returns the kept indices in the order they were kept.
+
+    The random numbers of each pass are drawn in one call, and the numpy generator is rewound so that
+    exactly as many numbers are consumed as a point-by-point loop would consume.
+    '''
+    label_probabilities = np.zeros(max(label_order) + 1)
+    label_probabilities[label_order] = probabilities
+    point_probabilities = label_probabilities[labels.numpy()]
+
+    selected_chunks = []
+    selected_number = 0
+    while selected_number < num_points:
+        rng_state = np.random.get_state()
+        hits = np.nonzero(np.random.rand(len(labels)) < point_probabilities)[0]
+        missing = num_points - selected_number
+        if len(hits) >= missing:
+            hits = hits[:missing]
+            np.random.set_state(rng_state)
+            np.random.rand(hits[-1] + 1)
+        selected_chunks.append(hits)
+        selected_number += len(hits)
+
+    selected_indices = np.concatenate(selected_chunks) if selected_chunks else np.empty(0, dtype=np.int64)
+    return torch.from_numpy(selected_indices)
 
 def generate_DA_dist(
     dist_bank: list,

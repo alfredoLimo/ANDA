@@ -837,8 +837,8 @@ def split_feature_condition_skew(
 
             client_Count += 1
 
-            train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
-            test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
+            train_rotations = [rotation_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_rotations = [rotation_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
@@ -856,8 +856,8 @@ def split_feature_condition_skew(
             print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
             client_Count += 1
 
-            train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
-            test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
+            train_colors = [color_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_colors = [color_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
             client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
@@ -964,8 +964,8 @@ def split_feature_condition_skew_unbalanced(
             print(f'Client {client_Count} rotation mapping: {rotation_mapping}') if verbose else None
             client_Count += 1
 
-            train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
-            test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
+            train_rotations = [rotation_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_rotations = [rotation_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
@@ -984,8 +984,8 @@ def split_feature_condition_skew_unbalanced(
             print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
             client_Count += 1
 
-            train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
-            test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
+            train_colors = [color_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_colors = [color_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
             client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
@@ -1226,8 +1226,8 @@ def split_feature_condition_skew_with_label_skew(
             
             print(f'Rotation Mapping: {rotation_mapping}') if verbose else None
 
-            train_rotations = [rotation_mapping[label.item()] for label in sub_train_labels]
-            test_rotations = [rotation_mapping[label.item()] for label in sub_test_labels]
+            train_rotations = [rotation_mapping[label] for label in sub_train_labels.tolist()]
+            test_rotations = [rotation_mapping[label] for label in sub_test_labels.tolist()]
 
             sub_train_features = rotate_dataset(sub_train_features, train_rotations)
             sub_test_features = rotate_dataset(sub_test_features, test_rotations)
@@ -1238,8 +1238,8 @@ def split_feature_condition_skew_with_label_skew(
             
             print(f'Color Mapping: {color_mapping}\n') if verbose else None
 
-            train_colors = [color_mapping[label.item()] for label in sub_train_labels]
-            test_colors = [color_mapping[label.item()] for label in sub_test_labels]
+            train_colors = [color_mapping[label] for label in sub_train_labels.tolist()]
+            test_colors = [color_mapping[label] for label in sub_test_labels.tolist()]
 
             sub_train_features = color_dataset(sub_train_features, train_colors)
             sub_test_features = color_dataset(sub_test_features, test_colors)
@@ -1630,8 +1630,8 @@ def split_feature_condition_skew_strict(
             }
             print(f'Client {client_Count} rotation mapping: {rotation_mapping}') if verbose else None
 
-            train_rotations = [rotation_mapping[label.item()] for label in client_data_train['labels']]
-            test_rotations = [rotation_mapping[label.item()] for label in client_data_test['labels']]
+            train_rotations = [rotation_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_rotations = [rotation_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = rotate_dataset(client_data_train['features'], train_rotations)
             client_data_test['features'] = rotate_dataset(client_data_test['features'], test_rotations)
@@ -1644,8 +1644,8 @@ def split_feature_condition_skew_strict(
             }
             print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
 
-            train_colors = [color_mapping[label.item()] for label in client_data_train['labels']]
-            test_colors = [color_mapping[label.item()] for label in client_data_test['labels']]
+            train_colors = [color_mapping[label] for label in client_data_train['labels'].tolist()]
+            test_colors = [color_mapping[label] for label in client_data_test['labels'].tolist()]
 
             client_data_train['features'] = color_dataset(client_data_train['features'], train_colors)
             client_data_test['features'] = color_dataset(client_data_test['features'], test_colors)
