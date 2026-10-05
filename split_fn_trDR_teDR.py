@@ -4,20 +4,8 @@ import random
 from itertools import permutations
 import torch
 from .utils import *
+from .utils import _rotation_angles, _color_names, _extend_dataset, _epoch_lockers, _swap_labels, _targeted_px_pattern
 
-# For reproducibility only
-def set_seed(
-    RANDOM_SEED: int = 42
-):
-    '''
-    Set the random seed for reproducibility.
-    
-    Args:
-        RANDOM_SEED (int): The random seed to set.
-    '''
-    random.seed(RANDOM_SEED)
-    torch.manual_seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
 
 def split_trDR_teDR_Px(
     train_features: torch.Tensor,
@@ -105,16 +93,9 @@ def split_trDR_teDR_Px(
     DA_max_dist = min(DA_max_dist, rotation_bank * color_bank)
 
     # generate pattern bank
-    angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+    angles = _rotation_angles(rotation_bank)
 
-    if color_bank == 1:
-        colors = ['gray']
-    elif color_bank == 2:
-        colors = ['red', 'blue']
-    elif color_bank == 3:
-        colors = ['red', 'blue', 'green']
-    else:
-        raise ValueError("The number of color patterns must be 1, 2, or 3.")
+    colors = _color_names(color_bank)
 
     pattern_bank = {i + 1: [angle, color] for i, (angle, color)
                     in enumerate([(angle, color) for angle in angles for color in colors])}
@@ -131,18 +112,8 @@ def split_trDR_teDR_Px(
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
         print(f"Client: {client_Count}") if verbose else None
         # training dataset scaling
-        original_train_feature = client_data_train['features']
-        original_train_label = client_data_train['labels']
-        indices = torch.randint(0, original_train_label.shape[0],
-                                (int(original_train_label.shape[0] * (DA_dataset_scaling - 1)),))
-        sampled_data = original_train_feature[indices]
-        sampled_label = original_train_label[indices]
-
-        cur_train_feature = torch.cat((original_train_feature, sampled_data), dim=0)
-        cur_train_label = torch.cat((original_train_label, sampled_label), dim=0)
-        permuted_indices = torch.randperm(cur_train_label.shape[0])
-        cur_train_feature = cur_train_feature[permuted_indices]
-        cur_train_label = cur_train_label[permuted_indices]
+        cur_train_feature, cur_train_label = _extend_dataset(
+            client_data_train['features'], client_data_train['labels'], DA_dataset_scaling)
 
         cur_test_feature = client_data_test['features']
         cur_test_label = client_data_test['labels']
@@ -154,8 +125,7 @@ def split_trDR_teDR_Px(
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
         
-        lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
-                else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
+        lockers = _epoch_lockers(DA_epoch_locker_num, DA_random_locker)
 
         print("Train distribution: ", train_dist,
               "\nTest distribution: ", test_dist,
@@ -316,8 +286,7 @@ def split_trDR_teDR_Py(
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
         
-        lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
-                else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
+        lockers = _epoch_lockers(DA_epoch_locker_num, DA_random_locker)
 
         print("Train distribution: ", train_dist,
               "\nTest distribution: ", test_dist,
@@ -469,18 +438,8 @@ def split_trDR_teDR_Py_x(
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
         print(f"Client: {client_Count}") if verbose else None
         # training dataset scaling
-        original_train_feature = client_data_train['features']
-        original_train_label = client_data_train['labels']
-        indices = torch.randint(0, original_train_label.shape[0],
-                                (int(original_train_label.shape[0] * (DA_dataset_scaling - 1)),))
-        sampled_data = original_train_feature[indices]
-        sampled_label = original_train_label[indices]
-
-        cur_train_feature = torch.cat((original_train_feature, sampled_data), dim=0)
-        cur_train_label = torch.cat((original_train_label, sampled_label), dim=0)
-        permuted_indices = torch.randperm(cur_train_label.shape[0])
-        cur_train_feature = cur_train_feature[permuted_indices]
-        cur_train_label = cur_train_label[permuted_indices]
+        cur_train_feature, cur_train_label = _extend_dataset(
+            client_data_train['features'], client_data_train['labels'], DA_dataset_scaling)
 
         cur_test_feature = client_data_test['features']
         cur_test_label = client_data_test['labels']
@@ -492,8 +451,7 @@ def split_trDR_teDR_Py_x(
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
         
-        lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
-                else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
+        lockers = _epoch_lockers(DA_epoch_locker_num, DA_random_locker)
 
         print("Train distribution: ", train_dist,
               "\nTest distribution: ", test_dist,
@@ -510,9 +468,7 @@ def split_trDR_teDR_Py_x(
             label_remapping = swapping_bank[train_dist[i]]
 
             # Label swapping
-            remapped_label_chunk = torch.clone(label_chunk)
-            for original_label, new_label in label_remapping.items():
-                remapped_label_chunk[label_chunk == original_label] = new_label
+            remapped_label_chunk = _swap_labels(label_chunk, label_remapping)
 
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
@@ -527,9 +483,7 @@ def split_trDR_teDR_Py_x(
 
         # Testing set
         label_remapping = swapping_bank[test_dist]
-        remapped_label = torch.clone(cur_test_label)
-        for original_label, new_label in label_remapping.items():
-            remapped_label[cur_test_label == original_label] = new_label
+        remapped_label = _swap_labels(cur_test_label, label_remapping)
 
         rearranged_data.append({
             'train': False,
@@ -640,16 +594,9 @@ def split_trDR_teDR_Px_y(
 
 
     # generate pyx bank
-    angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+    angles = _rotation_angles(rotation_bank)
 
-    if color_bank == 1:
-        colors = ['gray']
-    elif color_bank == 2:
-        colors = ['red', 'blue']
-    elif color_bank == 3:
-        colors = ['red', 'blue', 'green']
-    else:
-        raise ValueError("The number of color patterns must be 1, 2, or 3.")
+    colors = _color_names(color_bank)
 
     px_pattern_bank = [[angle, color] for angle in angles for color in colors]
 
@@ -676,18 +623,8 @@ def split_trDR_teDR_Px_y(
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):
         print(f"Client: {client_Count}") if verbose else None
         # training dataset scaling
-        original_train_feature = client_data_train['features']
-        original_train_label = client_data_train['labels']
-        indices = torch.randint(0, original_train_label.shape[0],
-                                (int(original_train_label.shape[0] * (DA_dataset_scaling - 1)),))
-        sampled_data = original_train_feature[indices]
-        sampled_label = original_train_label[indices]
-
-        cur_train_feature = torch.cat((original_train_feature, sampled_data), dim=0)
-        cur_train_label = torch.cat((original_train_label, sampled_label), dim=0)
-        permuted_indices = torch.randperm(cur_train_label.shape[0])
-        cur_train_feature = cur_train_feature[permuted_indices]
-        cur_train_label = cur_train_label[permuted_indices]
+        cur_train_feature, cur_train_label = _extend_dataset(
+            client_data_train['features'], client_data_train['labels'], DA_dataset_scaling)
 
         cur_test_feature = client_data_test['features']
         cur_test_label = client_data_test['labels']
@@ -699,8 +636,7 @@ def split_trDR_teDR_Px_y(
         train_dist = generate_DA_dist(dist_bank,
                                       DA_epoch_locker_num,DA_max_dist,DA_continual_divergence)
         
-        lockers = sorted(torch.rand(DA_epoch_locker_num - 1).tolist() + [0.0]) if DA_random_locker \
-                else torch.linspace(0, 1, steps=DA_epoch_locker_num + 1)[:-1].tolist()
+        lockers = _epoch_lockers(DA_epoch_locker_num, DA_random_locker)
 
         print("Train distribution: ", train_dist,
               "\nTest distribution: ", test_dist,
@@ -717,8 +653,7 @@ def split_trDR_teDR_Px_y(
             cur_classes = pyx_bank[train_dist[i]]['classes']
             cur_px_pattern = pyx_bank[train_dist[i]]['px_pattern']
 
-            cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in label_chunk.tolist()]
-            cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in label_chunk.tolist()]
+            cur_angle, cur_color = _targeted_px_pattern(label_chunk, cur_classes, cur_px_pattern)
 
             # Apply rotation and color transformations
             feature_chunk = rotate_dataset(feature_chunk, cur_angle)
@@ -739,8 +674,7 @@ def split_trDR_teDR_Px_y(
         cur_classes = pyx_bank[test_dist]['classes']
         cur_px_pattern = pyx_bank[test_dist]['px_pattern']
 
-        cur_angle = [float(cur_px_pattern[0]) if label in cur_classes else 0.0 for label in cur_test_label.tolist()]
-        cur_color = [cur_px_pattern[1] if label in cur_classes else 'gray' for label in cur_test_label.tolist()]
+        cur_angle, cur_color = _targeted_px_pattern(cur_test_label, cur_classes, cur_px_pattern)
 
         cur_test_feature = rotate_dataset(cur_test_feature, cur_angle)
         cur_test_feature = color_dataset(cur_test_feature, cur_color)

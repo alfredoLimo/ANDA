@@ -1,22 +1,8 @@
 import numpy as np
-import random
 import torch
 from .utils import *
-from .utils import _sample_by_label_probability
+from .utils import _rotation_angles, _color_names, _sample_by_label_probability
 
-# For reproducibility only
-def set_seed(
-    RANDOM_SEED: int = 42
-):
-    '''
-    Set the random seed for reproducibility.
-    
-    Args:
-        RANDOM_SEED (int): The random seed to set.
-    '''
-    random.seed(RANDOM_SEED)
-    torch.manual_seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
 
 def split_trND_teDR_Px(
     train_features: torch.Tensor,
@@ -84,16 +70,9 @@ def split_trND_teDR_Px(
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
     
     # generate pattern bank
-    angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+    angles = _rotation_angles(rotation_bank)
 
-    if color_bank == 1:
-        colors = ['gray']
-    elif color_bank == 2:
-        colors = ['red', 'blue']
-    elif color_bank == 3:
-        colors = ['red', 'blue', 'green']
-    else:
-        raise ValueError("The number of color patterns must be 1, 2, or 3.")
+    colors = _color_names(color_bank)
 
     pattern_bank = [[angle, color] for angle in angles for color in colors]
     # assign patterns to each client
@@ -430,16 +409,9 @@ def split_trND_teDR_Px_y(
     basic_split_data_test = split_basic(test_features, test_labels, client_number)
 
     # generate pattern bank
-    angles = [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+    angles = _rotation_angles(rotation_bank)
 
-    if color_bank == 1:
-        colors = ['gray']
-    elif color_bank == 2:
-        colors = ['red', 'blue']
-    elif color_bank == 3:
-        colors = ['red', 'blue', 'green']
-    else:
-        raise ValueError("The number of color patterns must be 1, 2, or 3.")
+    colors = _color_names(color_bank)
     
     client_Count = 0
     for client_data_train, client_data_test in zip(basic_split_data_train, basic_split_data_test):

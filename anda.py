@@ -1,4 +1,3 @@
-import random
 from . import split_fn
 from . import split_fn_trDA_teDR
 from . import split_fn_trND_teDR
@@ -14,6 +13,65 @@ from .split_fn_trDR_teDR import *
 from .split_fn_trDR_teND import *
 from .utils import *
 
+# Arguments used in auto mode, for each non_iid_type and non_iid_level.
+AUTO_MODE_PRESETS = {
+    "feature_skew": {
+        "low": dict(set_rotation=True, rotations=2, scaling_rotation_low=0.0, scaling_rotation_high=0.4, set_color=False, colors=2, scaling_color_low=0.0, scaling_color_high=0.4, random_order=True),
+        "medium": dict(set_rotation=True, rotations=2, scaling_rotation_low=0.3, scaling_rotation_high=0.7, set_color=True, colors=2, scaling_color_low=0.3, scaling_color_high=0.7, random_order=True),
+        "high": dict(set_rotation=True, rotations=4, scaling_rotation_low=0.6, scaling_rotation_high=1.0, set_color=True, colors=3, scaling_color_low=0.6, scaling_color_high=1.0, random_order=True),
+    },
+    "label_skew": {
+        "low": dict(scaling_label_low=0.0, scaling_label_high=0.5),
+        "medium": dict(scaling_label_low=0.5, scaling_label_high=1.0),
+        "high": dict(scaling_label_low=1.0, scaling_label_high=3.0),
+    },
+    "feature_label_skew": {
+        "low": dict(scaling_label_low=0.0, scaling_label_high=0.5, set_rotation=True, rotations=2, scaling_rotation_low=0.0, scaling_rotation_high=0.4, set_color=False, colors=2, scaling_color_low=0.0, scaling_color_high=0.4, random_order=True),
+        "medium": dict(scaling_label_low=0.5, scaling_label_high=1.0, set_rotation=True, rotations=2, scaling_rotation_low=0.3, scaling_rotation_high=0.7, set_color=True, colors=2, scaling_color_low=0.3, scaling_color_high=0.7, random_order=True),
+        "high": dict(scaling_label_low=1.0, scaling_label_high=3.0, set_rotation=True, rotations=4, scaling_rotation_low=0.6, scaling_rotation_high=1.0, set_color=True, colors=3, scaling_color_low=0.6, scaling_color_high=1.0, random_order=True),
+    },
+    "feature_skew_unbalanced": {
+        "low": dict(set_rotation=True, rotations=2, scaling_rotation_low=0.0, scaling_rotation_high=0.4, set_color=False, colors=2, scaling_color_low=0.0, scaling_color_high=0.4, std_dev=0.3, permute=True),
+        "medium": dict(set_rotation=True, rotations=2, scaling_rotation_low=0.3, scaling_rotation_high=0.7, set_color=True, colors=2, scaling_color_low=0.3, scaling_color_high=0.7, std_dev=1.0, permute=True),
+        "high": dict(set_rotation=True, rotations=4, scaling_rotation_low=0.6, scaling_rotation_high=1.0, set_color=True, colors=3, scaling_color_low=0.6, scaling_color_high=1.0, std_dev=2.0, permute=True),
+    },
+    "label_skew_unbalanced": {
+        "low": dict(scaling_label_low=0.0, scaling_label_high=0.5, std_dev=0.3),
+        "medium": dict(scaling_label_low=0.5, scaling_label_high=1.0, std_dev=1.0),
+        "high": dict(scaling_label_low=1.0, scaling_label_high=3.0, std_dev=2.0),
+    },
+    "label_condition_skew": {
+        "low": dict(random_mode=True, mixing_label_number=2, scaling_label_low=0.0, scaling_label_high=0.4),
+        "medium": dict(random_mode=True, mixing_label_number=3, scaling_label_low=0.3, scaling_label_high=0.7),
+        "high": dict(random_mode=True, mixing_label_number=5, scaling_label_low=0.6, scaling_label_high=1.0),
+    },
+    "label_condition_skew_unbalanced": {
+        "low": dict(random_mode=True, mixing_label_number=2, scaling_label_low=0.0, scaling_label_high=0.4, std_dev=0.3, permute=True),
+        "medium": dict(random_mode=True, mixing_label_number=3, scaling_label_low=0.3, scaling_label_high=0.7, std_dev=1.0, permute=True),
+        "high": dict(random_mode=True, mixing_label_number=5, scaling_label_low=0.6, scaling_label_high=1.0, std_dev=2.0, permute=True),
+    },
+    "feature_condition_skew": {
+        "low": dict(set_rotation=True, rotations=2, set_color=False, colors=2, random_mode=True, rotated_label_number=2, colored_label_number=2),
+        "medium": dict(set_rotation=True, rotations=2, set_color=True, colors=2, random_mode=True, rotated_label_number=3, colored_label_number=3),
+        "high": dict(set_rotation=True, rotations=4, set_color=True, colors=3, random_mode=True, rotated_label_number=5, colored_label_number=5),
+    },
+    "feature_condition_skew_unbalanced": {
+        "low": dict(set_rotation=True, rotations=2, set_color=False, colors=2, random_mode=True, rotated_label_number=2, colored_label_number=2, std_dev=0.3, permute=True),
+        "medium": dict(set_rotation=True, rotations=2, set_color=True, colors=2, random_mode=True, rotated_label_number=3, colored_label_number=3, std_dev=1.0, permute=True),
+        "high": dict(set_rotation=True, rotations=4, set_color=True, colors=3, random_mode=True, rotated_label_number=5, colored_label_number=5, std_dev=2.0, permute=True),
+    },
+    "label_condition_skew_with_label_skew": {
+        "low": dict(scaling_label_low=0.0, scaling_label_high=0.5, random_mode=True, mixing_label_number=2, scaling_swapping_low=0.0, scaling_swapping_high=0.4),
+        "medium": dict(scaling_label_low=0.5, scaling_label_high=1.0, random_mode=True, mixing_label_number=3, scaling_swapping_low=0.3, scaling_swapping_high=0.7),
+        "high": dict(scaling_label_low=1.0, scaling_label_high=3.0, random_mode=True, mixing_label_number=5, scaling_swapping_low=0.6, scaling_swapping_high=1.0),
+    },
+    "feature_condition_skew_with_label_skew": {
+        "low": dict(scaling_label_low=0.0, scaling_label_high=0.5, set_rotation=True, rotations=2, set_color=False, colors=2, random_mode=True, rotated_label_number=2, colored_label_number=2),
+        "medium": dict(scaling_label_low=0.5, scaling_label_high=1.0, set_rotation=True, rotations=2, set_color=True, colors=2, random_mode=True, rotated_label_number=3, colored_label_number=3),
+        "high": dict(scaling_label_low=1.0, scaling_label_high=3.0, set_rotation=True, rotations=4, set_color=True, colors=3, random_mode=True, rotated_label_number=5, colored_label_number=5),
+    },
+}
+
 def set_seed(
     RANDOM_SEED: int = 42
 ):
@@ -23,15 +81,6 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
-    random.seed(RANDOM_SEED)
-    torch.manual_seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
-    split_fn.set_seed(RANDOM_SEED)
-    split_fn_trDA_teDR.set_seed(RANDOM_SEED)
-    split_fn_trND_teDR.set_seed(RANDOM_SEED)
-    split_fn_trDA_teND.set_seed(RANDOM_SEED)
-    split_fn_trDR_teDR.set_seed(RANDOM_SEED)
-    split_fn_trDR_teND.set_seed(RANDOM_SEED)
     utils.set_seed(RANDOM_SEED)
 
 def load_split_datasets(
@@ -72,246 +121,14 @@ def load_split_datasets(
     train_features, train_labels, test_features, test_labels = load_full_datasets(dataset_name)
 
     if mode == "auto":
-        if non_iid_level == "low":
-            if non_iid_type == "feature_skew":
-                rearranged_data =  split_feature_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.0, scaling_rotation_high = 0.4,
-                    set_color = False, colors = 2, scaling_color_low = 0.0, scaling_color_high = 0.4,
-                    random_order = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew":
-                rearranged_data = split_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.0, scaling_label_high = 0.5,
-                )
-            elif non_iid_type == "feature_label_skew":
-                rearranged_data =  split_feature_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.0, scaling_label_high = 0.5,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.0, scaling_rotation_high = 0.4,
-                    set_color = False, colors = 2, scaling_color_low = 0.0, scaling_color_high = 0.4,
-                    random_order = True, verbose = verbose
-                )       
-            elif non_iid_type == "feature_skew_unbalanced":
-                rearranged_data =  split_feature_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.0, scaling_rotation_high = 0.4,
-                    set_color = False, colors = 2, scaling_color_low = 0.0, scaling_color_high = 0.4,
-                    std_dev = 0.3, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew_unbalanced":
-                rearranged_data = split_label_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.0, scaling_label_high = 0.5,
-                    std_dev = 0.3, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew":
-                rearranged_data = split_label_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 2,
-                    scaling_label_low = 0.0, scaling_label_high = 0.4, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_unbalanced":
-                rearranged_data = split_label_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 2,
-                    scaling_label_low = 0.0, scaling_label_high = 0.4,
-                    std_dev = 0.3, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew":
-                rearranged_data = split_feature_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, set_color = False, colors = 2,
-                    random_mode = True, rotated_label_number = 2, colored_label_number = 2,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_unbalanced":
-                rearranged_data = split_feature_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, set_color = False, colors = 2,
-                    random_mode = True, rotated_label_number = 2, colored_label_number = 2,
-                    std_dev = 0.3, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_with_label_skew":
-                rearranged_data = split_label_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.0, scaling_label_high = 0.5,
-                    random_mode = True, mixing_label_number = 2,
-                    scaling_swapping_low = 0.0, scaling_swapping_high = 0.4,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_with_label_skew":
-                rearranged_data = split_feature_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.0, scaling_label_high = 0.5,
-                    set_rotation = True, rotations = 2, set_color = False, colors = 2,
-                    random_mode = True, rotated_label_number = 2, colored_label_number = 2,
-                    verbose = verbose
-                )
-            else:
-                raise ValueError("Not supoorted non_iid_type.")
-
-        elif non_iid_level == "medium":
-            if non_iid_type == "feature_skew":
-                rearranged_data =  split_feature_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.3, scaling_rotation_high = 0.7,
-                    set_color = True, colors = 2, scaling_color_low = 0.3, scaling_color_high = 0.7,
-                    random_order = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew":
-                rearranged_data = split_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.5, scaling_label_high = 1.0,
-                )
-            elif non_iid_type == "feature_label_skew":
-                rearranged_data =  split_feature_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.5, scaling_label_high = 1.0,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.3, scaling_rotation_high = 0.7,
-                    set_color = True, colors = 2, scaling_color_low = 0.3, scaling_color_high = 0.7,
-                    random_order = True, verbose = verbose
-                )
-            elif non_iid_type == "feature_skew_unbalanced":
-                rearranged_data =  split_feature_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, scaling_rotation_low = 0.3, scaling_rotation_high = 0.7,
-                    set_color = True, colors = 2, scaling_color_low = 0.3, scaling_color_high = 0.7,
-                    std_dev = 1.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew_unbalanced":
-                rearranged_data = split_label_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.5, scaling_label_high = 1.0,
-                    std_dev = 1.0, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew":
-                rearranged_data = split_label_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 3,
-                    scaling_label_low = 0.3, scaling_label_high = 0.7, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_unbalanced":
-                rearranged_data = split_label_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 3,
-                    scaling_label_low = 0.3, scaling_label_high = 0.7,
-                    std_dev = 1.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew":
-                rearranged_data = split_feature_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, set_color = True, colors = 2,
-                    random_mode = True, rotated_label_number = 3, colored_label_number = 3,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_unbalanced":
-                rearranged_data = split_feature_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 2, set_color = True, colors = 2,
-                    random_mode = True, rotated_label_number = 3, colored_label_number = 3,
-                    std_dev = 1.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_with_label_skew":
-                rearranged_data = split_label_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.5, scaling_label_high = 1.0,
-                    random_mode = True, mixing_label_number = 3,
-                    scaling_swapping_low = 0.3, scaling_swapping_high = 0.7,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_with_label_skew":
-                rearranged_data = split_feature_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 0.5, scaling_label_high = 1.0,
-                    set_rotation = True, rotations = 2, set_color = True, colors = 2,
-                    random_mode = True, rotated_label_number = 3, colored_label_number = 3,
-                    verbose = verbose
-                )
-            else:
-                raise ValueError("Not supoorted non_iid_type.")
-        elif non_iid_level == "high":
-            if non_iid_type == "feature_skew":
-                rearranged_data =  split_feature_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 4, scaling_rotation_low = 0.6, scaling_rotation_high = 1.0,
-                    set_color = True, colors = 3, scaling_color_low = 0.6, scaling_color_high = 1.0,
-                    random_order = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew":
-                rearranged_data = split_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 1.0, scaling_label_high = 3.0,
-                )
-            elif non_iid_type == "feature_label_skew":
-                rearranged_data =  split_feature_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 1.0, scaling_label_high = 3.0,
-                    set_rotation = True, rotations = 4, scaling_rotation_low = 0.6, scaling_rotation_high = 1.0,
-                    set_color = True, colors = 3, scaling_color_low = 0.6, scaling_color_high = 1.0,
-                    random_order = True, verbose = verbose
-                )
-            elif non_iid_type == "feature_skew_unbalanced":
-                rearranged_data =  split_feature_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 4, scaling_rotation_low = 0.6, scaling_rotation_high = 1.0,
-                    set_color = True, colors = 3, scaling_color_low = 0.6, scaling_color_high = 1.0,
-                    std_dev = 2.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_skew_unbalanced":
-                rearranged_data = split_label_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 1.0, scaling_label_high = 3.0,
-                    std_dev = 2.0, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew":
-                rearranged_data = split_label_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 5,
-                    scaling_label_low = 0.6, scaling_label_high = 1.0, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_unbalanced":
-                rearranged_data = split_label_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    random_mode = True, mixing_label_number = 5,
-                    scaling_label_low = 0.6, scaling_label_high = 1.0,
-                    std_dev = 2.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew":
-                rearranged_data = split_feature_condition_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 4, set_color = True, colors = 3,
-                    random_mode = True, rotated_label_number = 5, colored_label_number = 5,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_unbalanced":
-                rearranged_data = split_feature_condition_skew_unbalanced(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    set_rotation = True, rotations = 4, set_color = True, colors = 3,
-                    random_mode = True, rotated_label_number = 5, colored_label_number = 5,
-                    std_dev = 2.0, permute = True, verbose = verbose
-                )
-            elif non_iid_type == "label_condition_skew_with_label_skew":
-                rearranged_data = split_label_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 1.0, scaling_label_high = 3.0,
-                    random_mode = True, mixing_label_number = 5,
-                    scaling_swapping_low = 0.6, scaling_swapping_high = 1.0,
-                    verbose = verbose
-                )
-            elif non_iid_type == "feature_condition_skew_with_label_skew":
-                rearranged_data = split_feature_condition_skew_with_label_skew(
-                    train_features, train_labels, test_features, test_labels, client_number,
-                    scaling_label_low = 1.0, scaling_label_high = 3.0,
-                    set_rotation = True, rotations = 4, set_color = True, colors = 3,
-                    random_mode = True, rotated_label_number = 5, colored_label_number = 5,
-                    verbose = verbose
-                )
-            else:
-                raise ValueError("Not supoorted non_iid_type.")
-        else:
+        if non_iid_level not in ["low", "medium", "high"]:
             raise ValueError("non_iid_level must be 'low', 'medium', or 'high'")
+        if non_iid_type not in AUTO_MODE_PRESETS:
+            raise ValueError("Not supported non_iid_type.")
+        rearranged_data = globals()[f"split_{non_iid_type}"](
+            train_features, train_labels, test_features, test_labels, client_number,
+            verbose = verbose, **AUTO_MODE_PRESETS[non_iid_type][non_iid_level]
+        )
 
     elif mode == "manual":
         fn = f"split_{non_iid_type}"

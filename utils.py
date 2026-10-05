@@ -553,6 +553,83 @@ def _label_counts(
     labels = np.asarray(labels).astype(np.int64).ravel()
     return torch.from_numpy(np.bincount(labels, minlength=10))
 
+# ---------------------------------------------------------------------------
+# Building blocks shared by the drifting (dynamic) split functions
+# ---------------------------------------------------------------------------
+
+def _rotation_angles(
+    rotation_bank: int
+) -> list:
+    '''
+    Returns the rotation angles of a rotation bank. 1 as no rotation.
+    '''
+    return [i * 360 / rotation_bank for i in range(rotation_bank)] if rotation_bank > 1 else [0.0]
+
+def _color_names(
+    color_bank: int
+) -> list:
+    '''
+    Returns the colors of a color bank. 1 as no color.
+    '''
+    if color_bank == 1:
+        return ['gray']
+    elif color_bank == 2:
+        return ['red', 'blue']
+    elif color_bank == 3:
+        return ['red', 'blue', 'green']
+    raise ValueError("The number of color patterns must be 1, 2, or 3.")
+
+def _extend_dataset(
+    features: torch.Tensor,
+    labels: torch.Tensor,
+    dataset_scaling: float
+) -> tuple:
+    '''
+    Extends a dataset to dataset_scaling times its size with randomly repeated datapoints, then shuffles it.
+    '''
+    indices = torch.randint(0, labels.shape[0], (int(labels.shape[0] * (dataset_scaling - 1)),))
+    features = torch.cat((features, features[indices]), dim=0)
+    labels = torch.cat((labels, labels[indices]), dim=0)
+    permuted_indices = torch.randperm(labels.shape[0])
+    return features[permuted_indices], labels[permuted_indices]
+
+def _epoch_lockers(
+    epoch_locker_num: int,
+    random_locker: bool
+) -> list:
+    '''
+    Returns the epoch locker indicators (when each subset starts during training), starting with 0.0.
+    '''
+    if random_locker:
+        return sorted(torch.rand(epoch_locker_num - 1).tolist() + [0.0])
+    return torch.linspace(0, 1, steps=epoch_locker_num + 1)[:-1].tolist()
+
+def _swap_labels(
+    labels: torch.Tensor,
+    label_remapping: dict
+) -> torch.Tensor:
+    '''
+    Returns a copy of labels where each original label is replaced by label_remapping[original label].
+    '''
+    remapped_labels = torch.clone(labels)
+    for original_label, new_label in label_remapping.items():
+        remapped_labels[labels == original_label] = new_label
+    return remapped_labels
+
+def _targeted_px_pattern(
+    labels: torch.Tensor,
+    targeted_classes: list,
+    px_pattern: list
+) -> tuple:
+    '''
+    Returns the angle and color of each datapoint: px_pattern for the targeted classes, no change otherwise.
+    '''
+    angle, color = px_pattern
+    targeted = [label in targeted_classes for label in labels.tolist()]
+    angles = [float(angle) if t else 0.0 for t in targeted]
+    colors = [color if t else 'gray' for t in targeted]
+    return angles, colors
+
 def count_labels_static(
     data_list: list
 ) -> None:

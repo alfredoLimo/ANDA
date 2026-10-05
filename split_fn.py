@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from collections import Counter
 from scipy.stats import truncnorm
 import itertools
@@ -7,19 +6,6 @@ import torch
 
 from .utils import *
 
-# For reproducibility only
-def set_seed(
-    RANDOM_SEED: int = 42
-):
-    '''
-    Set the random seed for reproducibility.
-    
-    Args:
-        RANDOM_SEED (int): The random seed to set.
-    '''
-    random.seed(RANDOM_SEED)
-    torch.manual_seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
 
 def split_feature_skew(
     train_features: torch.Tensor,
