@@ -15,6 +15,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 

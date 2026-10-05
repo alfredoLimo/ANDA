@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from collections import Counter
 from scipy.stats import truncnorm
 import itertools
@@ -16,6 +17,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
@@ -520,8 +522,9 @@ def split_label_skew_unbalanced(
             'train_features': sub_train_features.detach().cpu().numpy(),
             'train_labels': sub_train_labels.detach().cpu().numpy(),
             'test_features': sub_test_features.detach().cpu().numpy(),
-            'test_labels': sub_test_labels.detach().cpu().numpy()
-        }        
+            'test_labels': sub_test_labels.detach().cpu().numpy(),
+            'cluster': -1
+        }
         rearranged_data.append(client_data)
 
     return rearranged_data
@@ -854,6 +857,16 @@ def split_feature_condition_skew(
                                 for label in np.arange(0, max_label+1).tolist()}
             
             print(f'Client {client_Count} color mapping: {color_mapping}') if verbose else None
+
+            # Without rotation, clients sharing the same color mapping form a cluster
+            if not set_rotation:
+                if color_mapping not in list_r_maps:
+                    dict_r_maps[client_Count] = n_clusters
+                    list_r_maps.append(color_mapping)
+                    n_clusters += 1
+                else:
+                    dict_r_maps[client_Count] = list_r_maps.index(color_mapping)
+
             client_Count += 1
 
             train_colors = [color_mapping[label] for label in client_data_train['labels'].tolist()]
@@ -872,7 +885,7 @@ def split_feature_condition_skew(
             'train_labels': basic_split_data_train[i]['labels'].detach().cpu().numpy(),
             'test_features': basic_split_data_test[i]['features'].detach().cpu().numpy(),
             'test_labels': basic_split_data_test[i]['labels'].detach().cpu().numpy(),
-            'cluster': dict_r_maps[i]
+            'cluster': dict_r_maps.get(i, -1)
         }
 
         rearranged_data.append(client_data)

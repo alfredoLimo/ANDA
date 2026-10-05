@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import torch
 from .utils import *
 from .utils import _sample_by_label_probability
@@ -13,6 +14,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 

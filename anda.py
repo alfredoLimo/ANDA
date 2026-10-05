@@ -1,3 +1,4 @@
+import random
 from . import split_fn
 from . import split_fn_trDA_teDR
 from . import split_fn_trND_teDR
@@ -22,6 +23,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     split_fn.set_seed(RANDOM_SEED)
@@ -320,10 +322,10 @@ def load_split_datasets(
                 **kwargs, 
             )
         else:
-            print(f"Function {fn} does not exist")
+            raise ValueError(f"Function {fn} does not exist. Check non_iid_type.")
 
     else:
-        raise ValueError("mode must be 'auto' or 'manual'")   
+        raise ValueError("mode must be 'auto' or 'manual'")
 
     if count_labels:
         print("Count labels...")
@@ -380,7 +382,7 @@ def load_split_datasets_dynamic(
             **kwargs,
         )
     else:
-        print(f"Function {fn} does not exist")
+        raise ValueError(f"Function {fn} does not exist.")
 
     if count_labels:
         print("Count labels...")

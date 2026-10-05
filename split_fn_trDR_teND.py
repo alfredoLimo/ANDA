@@ -15,6 +15,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
@@ -138,8 +139,8 @@ def split_trDR_teND_Px(
         last_dist_set.add(cur_DA_dist[-1]) 
         last_dist_list.append(cur_DA_dist[-1])
 
-    print("Last dist set: ", last_dist_set)
-    print("Last dist list: ", last_dist_list)
+    print("Last dist set: ", last_dist_set) if verbose else None
+    print("Last dist list: ", last_dist_list) if verbose else None
 
     for i in range(client_number):
         if not DA_seen_last:
@@ -197,11 +198,6 @@ def split_trDR_teND_Px(
             feature_chunk = rotate_dataset(feature_chunk, [float(angle)] * feature_chunk.shape[0])
             feature_chunk = color_dataset(feature_chunk, [color] * feature_chunk.shape[0])
 
-
-            if i == 0:
-                # print size of feature_chunk and label_chunk
-                print("Feature chunk size: ", feature_chunk.size())
-                print("Label chunk size: ", label_chunk.size())
 
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
@@ -343,8 +339,8 @@ def split_trDR_teND_Py(
         last_dist_set.add(cur_DA_dist[-1]) 
         last_dist_list.append(cur_DA_dist[-1])
 
-    print("Last dist set: ", last_dist_set)
-    print("Last dist list: ", last_dist_list)
+    print("Last dist set: ", last_dist_set) if verbose else None
+    print("Last dist list: ", last_dist_list) if verbose else None
 
     for i in range(client_number):
         if not DA_seen_last:
@@ -546,14 +542,13 @@ def split_trDR_teND_Py_x(
     # all_permutations = list(permutations(class_list))
     all_permutations = []
     seen = set()
+    DA_permu_num = min(DA_permu_num, math.factorial(mixing_num)) # there are only mixing_num! permutations
     while len(all_permutations) < DA_permu_num:
         perm = tuple(np.random.permutation(class_list))
         if perm not in seen:
             seen.add(perm)
             all_permutations.append(perm)
 
-
-    print("Flag 1")
 
     swapping_bank = {i+1: {class_list[j]: perm[j] for j in range(mixing_num)}
                      for i, perm in enumerate(all_permutations)}
@@ -576,8 +571,8 @@ def split_trDR_teND_Py_x(
         last_dist_set.add(cur_DA_dist[-1]) 
         last_dist_list.append(cur_DA_dist[-1])
 
-    print("Last dist set: ", last_dist_set)
-    print("Last dist list: ", last_dist_list)
+    print("Last dist set: ", last_dist_set) if verbose else None
+    print("Last dist list: ", last_dist_list) if verbose else None
 
     for i in range(client_number):
         if not DA_seen_last:
@@ -637,12 +632,6 @@ def split_trDR_teND_Py_x(
             remapped_label_chunk = torch.clone(label_chunk)
             for original_label, new_label in label_remapping.items():
                 remapped_label_chunk[label_chunk == original_label] = new_label
-
-            if i == 0:
-                # print size of feature_chunk and label_chunk
-                print("Feature chunk size: ", feature_chunk.size())
-                print("Label chunk size: ", label_chunk.size())
-                print("Remapped label chunk size: ", remapped_label_chunk.size())
 
             # Append the cumulative data to rearranged_data
             rearranged_data.append({
@@ -818,8 +807,8 @@ def split_trDR_teND_Px_y(
         last_dist_set.add(cur_DA_dist[-1]) 
         last_dist_list.append(cur_DA_dist[-1])
 
-    print("Last dist set: ", last_dist_set)
-    print("Last dist list: ", last_dist_list)
+    print("Last dist set: ", last_dist_set) if verbose else None
+    print("Last dist list: ", last_dist_list) if verbose else None
 
     for i in range(client_number):
         if not DA_seen_last:

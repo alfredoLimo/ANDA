@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import truncnorm
 import os
+import random
 
 import torch
 import torch.nn.functional as F
@@ -16,6 +17,7 @@ def set_seed(
     Args:
         RANDOM_SEED (int): The random seed to set.
     '''
+    random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
 
@@ -32,21 +34,11 @@ def merge_data(
         list: A list of four torch.Tensors containing the training features, training labels, testing features, and testing labels.
     
     '''
-    train_features = []
-    train_labels = []
-    test_features = []
-    test_labels = []
-    for client_data in data:
-        train_features.append(client_data['train_features'])
-        train_labels.append(client_data['train_labels'])
-        test_features.append(client_data['test_features'])
-        test_labels.append(client_data['test_labels'])
-
-    # Concatenate all the data
-    train_features = torch.cat(train_features, dim=0)
-    train_labels = torch.cat(train_labels, dim=0)
-    test_features = torch.cat(test_features, dim=0)
-    test_labels = torch.cat(test_labels, dim=0)
+    # Concatenate all the data (outputs of split functions are numpy arrays)
+    train_features = torch.cat([torch.as_tensor(client_data['train_features']) for client_data in data], dim=0)
+    train_labels = torch.cat([torch.as_tensor(client_data['train_labels']) for client_data in data], dim=0)
+    test_features = torch.cat([torch.as_tensor(client_data['test_features']) for client_data in data], dim=0)
+    test_labels = torch.cat([torch.as_tensor(client_data['test_labels']) for client_data in data], dim=0)
 
     return [train_features, train_labels, test_features, test_labels]
 
@@ -434,32 +426,7 @@ def assigning_gray_color_features(
         list: A list of colors assigned to the datapoints.
     '''
 
-    assert 0 <= scaling <= 1, "k must be between 0 and 1."
-    assert colors == 2 or colors == 3, "Color must be 2 or 3."
-    
-    # Scale the values based on k
-    values = np.arange(colors, 0, -1)  # From N to 1
-    scaled_values = values * scaling
-    
-    # Apply softmax to get the probabilities
-    exp_values = np.exp(scaled_values)
-    probabilities = exp_values / np.sum(exp_values)
-
-    if colors == 2:
-        letters = ['red', 'blue']
-    else:
-        letters = ['red', 'blue', 'green']
-
-    if random_order:
-        np.random.shuffle(letters)
-
-    colors_assigned = np.random.choice(letters, size=datapoint_number, p=probabilities)
-
-    # unique, counts = np.unique(colors_assigned, return_counts=True)
-    # for letter, count in zip(unique, counts):
-    #     print(f'{letter}: {count}')
-
-    return colors_assigned
+    return assigning_color_features(datapoint_number, colors, scaling, random_order)
 
 def calculate_probabilities(
     labels,
@@ -560,6 +527,15 @@ def generate_DA_dist(
     
     return lst
 
+def _label_counts(
+    labels
+) -> torch.Tensor:
+    '''
+    Counts the occurrences of each class (at least 10 classes are shown).
+    '''
+    labels = np.asarray(labels).astype(np.int64).ravel()
+    return torch.from_numpy(np.bincount(labels, minlength=10))
+
 def count_labels_static(
     data_list: list
 ) -> None:
@@ -572,15 +548,9 @@ def count_labels_static(
     '''
     # Print label counts for each dictionary
     for i, data in enumerate(data_list):
-        train_labels = data['train_labels']
-        test_labels = data['test_labels']
-        
-        train_label_counts = torch.tensor([train_labels.tolist().count(x) for x in range(10)])
-        test_label_counts = torch.tensor([test_labels.tolist().count(x) for x in range(10)])
-        
         print(f"Client {i}:")
-        print("Training label counts:", train_label_counts)
-        print("Test label counts:", test_label_counts)
+        print("Training label counts:", _label_counts(data['train_labels']))
+        print("Test label counts:", _label_counts(data['test_labels']))
         print("\n")
     
     return
@@ -596,17 +566,53 @@ def count_labels_dynamic(
                           * Output of split_fns
     '''
     # Print label counts for each dictionary
-    for _, data in enumerate(data_list):
-        # Count the label occurrences for each class (assuming 10 classes)
-        label_counts = torch.tensor([data['labels'].tolist().count(x) for x in range(10)])
-
+    for data in data_list:
         print(
             f"Client {data['client_number']} | {'Train' if data['train'] else 'Test'} | "
             f"Epoch Locker Order: {data['epoch_locker_order']} | "
-            f"Label Counts: {label_counts.tolist()}"
+            f"Label Counts: {_label_counts(data['labels']).tolist()}"
         )
     
     return
+
+def _plot_images(
+    features,
+    labels,
+    title: str,
+    save_path: str
+) -> None:
+    '''
+    Plots the first 100 images in a 10x10 grid, saves the figure and shows it.
+    '''
+    features = np.asarray(features)
+    labels = np.asarray(labels)
+
+    num_images = min(100, features.shape[0])
+    fig, axes = plt.subplots(10, 10, figsize=(15, 15))
+    fig.suptitle(title.format(num_images=num_images), fontsize=16)
+
+    for i, ax in enumerate(axes.flat):
+        ax.axis('off')
+        if i >= num_images:
+            continue
+
+        image = features[i]
+        if image.ndim == 3 and image.shape[0] == 3:
+            # For colored or CIFAR images (3, H, W) -> (H, W, 3)
+            image = image.transpose(1, 2, 0)
+        else:
+            # For MNIST (1, H, W) or (H, W) -> (H, W)
+            image = image.squeeze()
+
+        ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
+        ax.set_title(labels[i].item())
+
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    # Save before showing: showing the figure may clear it in notebooks
+    fig.savefig(save_path)
+    print(f"Saved images to {save_path}")
+    plt.show()
+    plt.close(fig)
 
 def plot_static(
     data_list: list,
@@ -615,16 +621,14 @@ def plot_static(
     file_name: str = None
 ) -> None:
     '''
-    Print label counts and plot images.
+    Plot and save the first 100 training and testing images of some clients.
     
     Args:
         data_list (list): A list of dictionaries where each dictionary contains the features and labels for each client.
                           * Output of split_fns
         plot_indices (list): A list of indices to plot the first 100 images for each client.
         save_dir (str): The directory to save the images.
-
-    Warning:
-        Working for only 10 classes dataset. (EMNIST e CIFAR100 NOT SUPPORTED)
+        file_name (str): The prefix of the saved image files.
     '''
 
     os.makedirs(save_dir, exist_ok=True)
@@ -633,65 +637,16 @@ def plot_static(
         if idx < len(data_list):
             data = data_list[idx]
 
-            # training data plot
-            train_features = data['train_features']
-            train_labels = data['train_labels']
-            
-            num_images = min(100, train_features.shape[0])
-            fig, axes = plt.subplots(10, 10, figsize=(15, 15))
-            fig.suptitle(f'Dictionary {idx} - First {num_images} Training Images', fontsize=16)
-            
-            for i in range(num_images):
-                ax = axes[i // 10, i % 10]
-                image = train_features[i]
-                
-                if image.shape[0] == 3:
-                    # For CIFAR (3, H, W) -> (H, W, 3)
-                    image = image.permute(1, 2, 0).numpy()
-                else:
-                    # For MNIST (1, H, W) -> (H, W)
-                    image = image.squeeze().numpy()
-                
-                ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
-                ax.set_title(train_labels[i].item())
-                ax.axis('off')
-            
-            plt.tight_layout(rect=[0, 0, 1, 0.96])
-            plt.show()
-
-            save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_train_data_plot.png')
-            plt.savefig(save_path)
-            print(f"Saved images to {save_path}")
-
-            # testing data plot
-            test_features = data['test_features']
-            test_labels = data['test_labels']
-            
-            num_images = min(100, test_features.shape[0])
-            fig, axes = plt.subplots(10, 10, figsize=(15, 15))
-            fig.suptitle(f'Dictionary {idx} - First {num_images} Testing Images', fontsize=16)
-            
-            for i in range(num_images):
-                ax = axes[i // 10, i % 10]
-                image = test_features[i]
-                
-                if image.shape[0] == 3:
-                    # For CIFAR (3, H, W) -> (H, W, 3)
-                    image = image.permute(1, 2, 0).numpy()
-                else:
-                    # For MNIST (1, H, W) -> (H, W)
-                    image = image.squeeze().numpy()
-                
-                ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
-                ax.set_title(test_labels[i].item())
-                ax.axis('off')
-            
-            plt.tight_layout(rect=[0, 0, 1, 0.96])
-            plt.show()
-
-            save_path = os.path.join(save_dir, f'{file_name}_client_{idx}_test_data_plot.png')
-            plt.savefig(save_path)
-            print(f"Saved images to {save_path}")
+            _plot_images(
+                data['train_features'], data['train_labels'],
+                f'Dictionary {idx} - First {{num_images}} Training Images',
+                os.path.join(save_dir, f'{file_name}_client_{idx}_train_data_plot.png')
+            )
+            _plot_images(
+                data['test_features'], data['test_labels'],
+                f'Dictionary {idx} - First {{num_images}} Testing Images',
+                os.path.join(save_dir, f'{file_name}_client_{idx}_test_data_plot.png')
+            )
 
 def plot_dynamic(
     data_list: list,
@@ -701,56 +656,28 @@ def plot_dynamic(
     file_name: str = None
 ) -> None:
     '''
-    Print label counts and plot images. (for drifting and dynamic datasets)
+    Plot and save the first 100 images of some subsets of one client. (for drifting and dynamic datasets)
     
     Args:
         data_list (list): A list of dictionaries where each dictionary contains the features and labels for each client.
                           * Output of split_fns
         client (int): The client index to plot the images.
-        locker_indices (list): A list of indices to plot the images.
-        count (bool): If True, print the label counts.
+        locker_indices (list): The epoch locker orders to plot. -1 is the testing set.
         save_dir (str): The directory to save the images.
-        file_name (str): The name of the file to save the images.
-
-    Warning:
-        Work with 10 classes dataset. (EMNIST e CIFAR100 NOT #TODO SUPPORTED)
+        file_name (str): The prefix of the saved image files.
     '''
 
     os.makedirs(save_dir, exist_ok=True)
 
-    for _ , data in enumerate(data_list):
+    for data in data_list:
         # Check if the current client matches and if the epoch_locker_order is in locker_indices
         if data['client_number'] == client and data['epoch_locker_order'] in locker_indices:
 
-            # Features and labels are based on the current data dictionary
-            features, labels = data['features'], data['labels']
-            
             # Determine whether we are dealing with training or testing data based on 'train'
             data_type = 'Training' if data['train'] else 'Testing'
 
-            num_images = min(100, features.shape[0])
-            fig, axes = plt.subplots(10, 10, figsize=(15, 15))
-            fig.suptitle(f'Client {data["client_number"]} | {data_type} | Epoch Locker Order: {data["epoch_locker_order"]} | First {num_images} Images', fontsize=16)
-
-            for i in range(num_images):
-                ax = axes[i // 10, i % 10]
-                image = features[i]
-                
-                if image.shape[0] == 3:
-                    # For CIFAR (3, H, W) -> (H, W, 3)
-                    image = image.permute(1, 2, 0).numpy()
-                else:
-                    # For MNIST (1, H, W) -> (H, W)
-                    image = image.squeeze().numpy()
-
-                ax.imshow(image, cmap='gray' if image.ndim == 2 else None)
-                ax.set_title(labels[i].item())
-                ax.axis('off')
-
-            plt.tight_layout(rect=[0, 0, 1, 0.96])
-            plt.show()
-            
-            save_path = os.path.join(save_dir, f'{file_name}_client_{data["client_number"]}_epoch_{data["epoch_locker_order"]}_{data_type}_data_plot.png')
-            plt.savefig(save_path)
-            print(f"Saved images to {save_path}")
-            
+            _plot_images(
+                data['features'], data['labels'],
+                f'Client {data["client_number"]} | {data_type} | Epoch Locker Order: {data["epoch_locker_order"]} | First {{num_images}} Images',
+                os.path.join(save_dir, f'{file_name}_client_{data["client_number"]}_epoch_{data["epoch_locker_order"]}_{data_type}_data_plot.png')
+            )
