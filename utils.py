@@ -441,31 +441,63 @@ def calculate_probabilities(
     
     return probabilities
 
+def _select_by_probability(
+    point_probabilities: np.ndarray,
+    labels: np.ndarray,
+    num_points: int,
+    draw,
+    get_state,
+    set_state
+) -> np.ndarray:
+    '''
+    Walks over the datapoints and keeps each one with its probability, one pass after another,
+    until num_points different datapoints are kept. Returns the kept indices in the order they were kept.
+
+    Args:
+        point_probabilities (np.ndarray): The probability of keeping each datapoint.
+        labels (np.ndarray): The label of each datapoint.
+        num_points (int): The number of datapoints to keep (at most all of them).
+        draw, get_state, set_state: Draw n uniform numbers / save / restore the random generator.
+
+    The random numbers of a pass are drawn in one call. The generator is then rewound so that exactly
+    as many numbers are consumed as a point-by-point loop would consume.
+    A datapoint is never kept twice. When no datapoint left can be drawn any more (e.g. the preferred
+    labels are used up), the most likely datapoints left are taken.
+    '''
+    num_points = min(int(num_points), len(point_probabilities))
+    taken = np.zeros(len(point_probabilities), dtype=bool)
+    selected_chunks = []
+    selected_number = 0
+    while selected_number < num_points:
+        rng_state = get_state()
+        hits = np.nonzero((draw(len(point_probabilities)) < point_probabilities) & ~taken)[0]
+        missing = num_points - selected_number
+        if len(hits) >= missing:
+            hits = hits[:missing]
+            set_state(rng_state)
+            draw(int(hits[-1]) + 1)
+        elif len(hits) == 0:
+            left = np.nonzero(~taken)[0]
+            label_counts = np.bincount(labels[left])[labels[left]]
+            order = np.lexsort((left, -label_counts, -point_probabilities[left]))
+            hits = left[order[:missing]]
+        taken[hits] = True
+        selected_chunks.append(hits)
+        selected_number += len(hits)
+
+    return np.concatenate(selected_chunks) if selected_chunks else np.empty(0, dtype=np.int64)
+
 def create_sub_dataset(
         features, 
         labels, 
         probabilities, 
         num_points
 ):
-    # Walk over the datapoints and keep each one with the probability of its label,
-    # one pass after another until num_points are selected.
-    # Each pass draws its random numbers in one call; the generator is then rewound so that exactly
-    # as many numbers are consumed as a point-by-point loop would consume.
-    point_probabilities = probabilities[labels]
-    selected_chunks = []
-    selected_number = 0
-    while selected_number < num_points:
-        rng_state = torch.get_rng_state()
-        hits = torch.nonzero(torch.rand(len(labels)) < point_probabilities).flatten()
-        missing = num_points - selected_number
-        if len(hits) >= missing:
-            hits = hits[:missing]
-            torch.set_rng_state(rng_state)
-            torch.rand(hits[-1].item() + 1)
-        selected_chunks.append(hits)
-        selected_number += len(hits)
+    # Keep each datapoint with the probability of its label until num_points are selected
+    selected_indices = torch.from_numpy(_select_by_probability(
+        probabilities[labels].numpy(), labels.numpy(), num_points,
+        lambda n: torch.rand(n).numpy(), torch.get_rng_state, torch.set_rng_state))
 
-    selected_indices = torch.cat(selected_chunks) if selected_chunks else torch.empty(0, dtype=torch.long)
     sub_features = features[selected_indices]
     sub_labels = labels[selected_indices]
     remaining_indices = torch.ones(len(labels), dtype=torch.bool)
@@ -482,31 +514,16 @@ def _sample_by_label_probability(
     num_points: int
 ) -> torch.Tensor:
     '''
-    Cycles over the datapoints and keeps each one with probability probabilities[label_order.index(label)]
-    until num_points are kept. Returns the kept indices in the order they were kept.
-
-    The random numbers of each pass are drawn in one call, and the numpy generator is rewound so that
-    exactly as many numbers are consumed as a point-by-point loop would consume.
+    Keeps datapoints with probability probabilities[label_order.index(label)] until num_points are kept,
+    using the numpy random generator. Returns the kept indices in the order they were kept.
     '''
     label_probabilities = np.zeros(max(label_order) + 1)
     label_probabilities[label_order] = probabilities
-    point_probabilities = label_probabilities[labels.numpy()]
+    labels = labels.numpy()
 
-    selected_chunks = []
-    selected_number = 0
-    while selected_number < num_points:
-        rng_state = np.random.get_state()
-        hits = np.nonzero(np.random.rand(len(labels)) < point_probabilities)[0]
-        missing = num_points - selected_number
-        if len(hits) >= missing:
-            hits = hits[:missing]
-            np.random.set_state(rng_state)
-            np.random.rand(hits[-1] + 1)
-        selected_chunks.append(hits)
-        selected_number += len(hits)
-
-    selected_indices = np.concatenate(selected_chunks) if selected_chunks else np.empty(0, dtype=np.int64)
-    return torch.from_numpy(selected_indices)
+    return torch.from_numpy(_select_by_probability(
+        label_probabilities[labels], labels, num_points,
+        np.random.rand, np.random.get_state, np.random.set_state))
 
 def generate_DA_dist(
     dist_bank: list,
