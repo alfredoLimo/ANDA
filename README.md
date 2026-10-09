@@ -526,24 +526,16 @@ Dataset loading, rotation and label-based sampling are several times faster.
 If you find this work useful for your research, please cite the following papers:
 
 ```bibtex
-@misc{li2026federatedlearningprofilemapping,
-      title={Federated Learning with Profile Mapping under Distribution Shifts and Drifts}, 
-      author={Mohan Li and Dario Fenoglio and Martin Gjoreski and Marc Langheinrich},
-      year={2026},
-      eprint={2602.07671},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={[https://arxiv.org/abs/2602.07671](https://arxiv.org/abs/2602.07671)}, 
+@inproceedings{ICLR2026_7565f036,
+ author = {Li, Mohan and Fenoglio, Dario and Gjoreski, Martin and Langheinrich, Marc},
+ booktitle = {International Conference on Learning Representations},
+ editor = {C. Vondrick and B. Hariharan and C. Raffel and L. Pinto and D. Yang and A. Faust},
+ pages = {72119--72170},
+ title = {Federated Learning with Profile Mapping under Distribution Shifts and Drifts},
+ url = {https://proceedings.iclr.cc/paper_files/paper/2026/file/7565f036ceb20a2c74d341bfaa9fffad-Paper-Conference.pdf},
+ volume = {2026},
+ year = {2026}
 }
 
-@misc{fenoglio2025fluxefficientdescriptordrivenclustered,
-      title={FLUX: Efficient Descriptor-Driven Clustered Federated Learning under Arbitrary Distribution Shifts}, 
-      author={Dario Fenoglio and Mohan Li and Pietro Barbiero and Nicholas D. Lane and Marc Langheinrich and Martin Gjoreski},
-      year={2025},
-      eprint={2511.22305},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={[https://arxiv.org/abs/2511.22305](https://arxiv.org/abs/2511.22305)}, 
-}
 ```
 
